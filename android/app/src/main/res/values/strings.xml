@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Points 积分管理</string>
+    <string name="title_activity_main">Points 积分管理</string>
+    <string name="package_name">com.points.family</string>
+    <string name="custom_url_scheme">com.points.family</string>
+</resources>

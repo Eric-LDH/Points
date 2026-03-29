@@ -1,0 +1,1825 @@
+// 变量定义
+:root {
+  // 主色调
+  --primary-color: #6366F1;
+  --primary-light: #818CF8;
+  --primary-dark: #4F46E5;
+  
+  // 辅助色
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --danger-color: #EF4444;
+  --info-color: #3B82F6;
+  
+  // 中性色 - 浅色模式
+  --bg-color: #F9FAFB;
+  --card-bg: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border-color: #E5E7EB;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  // 深色模式
+  --dark-bg: #1F2937;
+  --dark-card-bg: #374151;
+  --dark-text-primary: #F9FAFB;
+  --dark-text-secondary: #D1D5DB;
+  --dark-border: #4B5563;
+  --dark-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  
+  // 圆角
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  // 间距
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+}
+
+// 全局重置
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  // 移除点击高亮效果
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  font-family: 'SF Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  // 确保内容延伸到状态栏区域
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  
+  // 深色模式适配
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--dark-bg) !important;
+    color: var(--dark-text-primary);
+  }
+}
+
+// #app 容器样式
+#app {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg-color);
+  // 添加顶部安全区域，避免内容被状态栏遮挡
+  padding-top: env(safe-area-inset-top, 44px);
+  
+  // 深色模式
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--dark-bg) !important;
+  }
+}
+
+// ✅ 公共头部导航栏（固定在顶部）- 仅应用于有返回按钮的页面
+.page-header,
+.rule-list-page .header,
+.reward-list-page .header,
+.record-page .header,
+.rule-edit-page .header,
+.reward-form-page .header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(var(--spacing-md) + env(safe-area-inset-top, 0px)) var(--spacing-lg) var(--spacing-md);
+  background-color: var(--bg-color) !important;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  
+  .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary) !important;
+  }
+  
+  // 深色模式适配
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--dark-bg) !important;
+    
+    .page-title {
+      color: var(--dark-text-primary) !important;
+    }
+  }
+}
+
+// ✅ 页面容器添加顶部安全区域，避免内容被固定头部遮挡
+.rule-list-page,
+.reward-list-page,
+.record-page,
+.rule-edit-page,
+.reward-form-page {
+  padding-top: calc(60px + env(safe-area-inset-top, 0px));
+}
+
+// ✅ 首页头部问候卡片（不固定）
+.index-page .header {
+  margin-bottom: var(--spacing-xl);
+  
+  &__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  &__date {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+// 状态栏区域背景（关键修复）
+@media (prefers-color-scheme: dark) {
+  html.dark,
+  html.dark body,
+  html.dark #app,
+  .app-container.dark,
+  .app-container.dark body,
+  .app-container.dark #app {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  // 确保所有页面容器都使用深色背景
+  .index-page,
+  .stats-page,
+  .record-page,
+  .exchange-page,
+  .mine-page,
+  .reward-list-page,
+  .reward-form-page,
+  .rule-list-page,
+  .rule-edit-page {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  // 华为设备特殊处理：强制根元素和所有祖先元素使用深色背景
+  :root {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  html, body {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  // 状态栏安全区域
+  @supports (padding-top: env(safe-area-inset-top)) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      background-color: var(--dark-bg) !important;
+    }
+  }
+}
+
+// 深色模式 - 支持两种模式：html.dark 和 .app-container.dark
+html.dark,
+.app-container.dark {
+  background-color: var(--dark-bg) !important;
+  color: var(--dark-text-primary);
+  
+  // 强制 html 和 body 也使用深色背景
+  &, & body {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  .app-container {
+    background-color: var(--dark-bg) !important;
+  }
+  
+  .card {
+    background-color: var(--dark-card-bg);
+    box-shadow: var(--dark-shadow);
+  }
+  
+  // 页面标题
+  .page-title {
+    color: var(--dark-text-primary);
+  }
+  
+  // 章节标题
+  .section-title {
+    color: var(--dark-text-primary);
+  }
+  
+  // 菜单项
+  .menu-item {
+    background: var(--dark-card-bg);
+    border-bottom-color: var(--dark-border);
+    color: var(--dark-text-primary);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__title {
+      color: var(--dark-text-primary);
+    }
+    
+    &__arrow {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // 备份信息
+  .backup-info {
+    &__label {
+      color: var(--dark-text-primary);
+    }
+    
+    &__size {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__time {
+      color: var(--dark-text-muted);
+    }
+  }
+  
+  // 输入框、日期选择器、文本域
+  .input,
+  .date-input,
+  textarea,
+  input[type="text"],
+  input[type="date"] {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+    
+    &:focus {
+      border-color: var(--primary-color);
+    }
+    
+    &::placeholder {
+      color: var(--dark-text-muted);
+    }
+  }
+  
+  // 模态框
+  .modal {
+    background-color: var(--dark-card-bg);
+    
+    .modal-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .form-label {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // 子选项
+  .child-option {
+    background: var(--dark-border);
+    color: var(--dark-text-primary);
+    
+    &:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    &.active {
+      background: rgba(99, 102, 241, 0.2);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__points {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // 规则卡片
+  .rule-card {
+    background: var(--dark-card-bg);
+    color: var(--dark-text-primary);
+    border-color: var(--dark-border);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__points {
+      color: var(--dark-text-secondary);
+    }
+    
+    .checkmark {
+      background: var(--success-color);
+      color: white;
+    }
+    
+    .completed-flag {
+      color: var(--text-muted);
+    }
+  }
+  
+  // 开关
+  .switch {
+    background: var(--dark-border);
+    
+    &__knob {
+      background: white;
+    }
+  }
+  
+  // 按钮
+  .btn--outline {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  // 日期选择器
+  .date-selector {
+    background: var(--dark-card-bg);
+    color: var(--dark-text-primary);
+    
+    &__current {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // 模式切换
+  .mode-option {
+    color: var(--dark-text-secondary);
+    
+    &.active {
+      color: var(--primary-color);
+    }
+  }
+  
+  // 今日/昨日标记
+  .today-badge,
+  .yesterday-badge {
+    color: var(--dark-text-primary);
+  }
+  
+  // 空状态
+  .empty-state {
+    color: var(--dark-text-secondary);
+    background: var(--dark-card-bg);
+  }
+  
+  // 规则选项（快捷记录弹出框）
+  .rule-option {
+    background: var(--dark-card-bg);
+    
+    &:hover {
+      background: var(--primary-color);
+      
+      .rule-option__name {
+        color: white;
+      }
+      
+      .rule-option__points {
+        color: white;
+      }
+    }
+    
+    &.completed {
+      background: rgba(16, 185, 129, 0.05);
+      
+      &:hover {
+        background: rgba(16, 185, 129, 0.1);
+      }
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__points {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // 记录项
+  .record-item {
+    background: var(--dark-card-bg);
+    border-bottom-color: var(--dark-border);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__date {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__icon {
+      filter: none;
+    }
+  }
+  
+  // 分类项
+  .category-item {
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__count {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__points {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // 进度条
+  .progress-bar {
+    background: var(--dark-border);
+    
+    &__fill {
+      background: var(--primary-color);
+    }
+  }
+  
+  // 商品卡片
+  .reward-card {
+    background: var(--dark-card-bg);
+    border-color: var(--dark-border);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__cost {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__limit {
+      color: var(--dark-text-muted);
+    }
+  }
+  
+  // 兑换历史
+  .exchange-history {
+    background: var(--dark-card-bg);
+    border-color: var(--dark-border);
+    
+    &__item {
+      border-bottom-color: var(--dark-border);
+      
+      &__name {
+        color: var(--dark-text-primary);
+      }
+      
+      &__date {
+        color: var(--dark-text-secondary);
+      }
+      
+      &__cost {
+        color: var(--danger-color);
+      }
+    }
+  }
+  
+  // 返回按钮
+  .btn-back {
+    color: var(--dark-text-secondary);
+    
+    &:hover {
+      color: var(--primary-color);
+    }
+  }
+  
+  // ✅ 首页头部统计
+  .index-page .header {
+    background-color: var(--dark-card-bg);
+    box-shadow: var(--dark-shadow);
+    
+    &__title {
+      color: var(--dark-text-primary);
+    }
+    
+    &__date {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__streak {
+      background: linear-gradient(135deg, #B45309, #D97706);
+    }
+  }
+  
+  // ✅ 统计项
+  .stat-item {
+    background: var(--dark-border);
+    
+    &__label {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__value {
+      color: var(--dark-text-primary);
+    }
+    
+    &.text-primary {
+      color: var(--primary-color);
+    }
+    
+    &.text-success {
+      color: var(--success-color);
+    }
+  }
+  
+  // ✅ 快捷操作按钮
+  .quick-action-btn {
+    background: var(--dark-card-bg);
+    
+    span {
+      color: var(--dark-text-secondary);
+    }
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+  }
+  
+  // ✅ 规则项/记录项（通用）
+  .rule-item,
+  .record-item {
+    background: var(--dark-card-bg);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__category,
+    &__time {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__points {
+      &.positive {
+        color: var(--success-color);
+      }
+      
+      &.negative {
+        color: var(--danger-color);
+      }
+    }
+  }
+  
+  // ✅ 兑换商品卡片
+  .item-card {
+    background: var(--dark-card-bg);
+    border-color: var(--dark-border);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__points {
+      color: var(--dark-text-primary);
+    }
+    
+    &__cycle-badge {
+      background: var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 兑换商品行
+  .item-row {
+    background: var(--dark-card-bg);
+    border-bottom-color: var(--dark-border);
+    
+    &:hover {
+      background: var(--dark-border);
+    }
+    
+    &__name {
+      color: var(--dark-text-primary);
+    }
+    
+    &__desc {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__limit {
+      color: var(--dark-text-muted);
+    }
+    
+    &__points {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // ✅ 兑换页面
+  .exchange-page {
+    background-color: var(--dark-bg) !important;
+    
+    .page-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .section-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 积分卡片
+  .points-card {
+    background: var(--dark-card-bg) !important;
+    
+    &__label {
+      color: var(--dark-text-secondary);
+    }
+    
+    &__value {
+      color: var(--dark-text-primary);
+    }
+  }
+  
+  // ✅ 模态框内容
+  .modal-content {
+    color: var(--dark-text-primary);
+  }
+  
+  .empty-record {
+    color: var(--dark-text-secondary);
+  }
+  
+  // ✅ 按钮文字颜色（确保深色模式下可见）
+  .btn--primary,
+  .btn--success {
+    color: white;
+  }
+  
+  // ✅ 积分规则管理页面
+  .rule-list-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .search-box {
+      .input {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-primary);
+        
+        &::placeholder {
+          color: var(--dark-text-muted);
+        }
+      }
+    }
+    
+    .category-filter {
+      .filter-tab {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &.active {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    .rules-list {
+      .rule-item,
+      .rule-card {
+        background: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__category {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__points {
+          color: var(--dark-text-primary);
+        }
+        
+        .icon-btn {
+          background: var(--dark-card-bg);
+          border-color: var(--dark-border);
+          color: var(--dark-text-secondary);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+          
+          &:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+          }
+          
+          &.active {
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+            
+            &:hover {
+              box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            }
+          }
+        }
+      }
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 兑换商品管理页面
+  .reward-list-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .search-box {
+      .input {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-primary);
+        
+        &::placeholder {
+          color: var(--dark-text-muted);
+        }
+      }
+    }
+    
+    .filter-bar {
+      .filter-chip {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &.active {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    .items-list {
+      .item-row {
+        background: var(--dark-card-bg);
+        border-bottom-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__desc {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__limit {
+          color: var(--dark-text-muted);
+        }
+        
+        &__points {
+          color: var(--dark-text-primary);
+        }
+      }
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 手工补录页面
+  .record-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .date-selector {
+      background: var(--dark-card-bg);
+      color: var(--dark-text-primary);
+      
+      &__current {
+        color: var(--dark-text-primary);
+      }
+      
+      &__info {
+        color: var(--dark-text-secondary);
+      }
+    }
+    
+    .mode-switch {
+      background: var(--dark-card-bg);
+      
+      .mode-option {
+        background: var(--dark-bg);
+        color: var(--dark-text-primary);
+        
+        &.active {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    .rules-grid {
+      .rule-card {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__points {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+    
+    .records-list {
+      .record-item {
+        background: var(--dark-card-bg);
+        border-bottom-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__time {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 统计页面 - 积分概览和本周表现
+  .stats-page {
+    background-color: var(--dark-bg);
+    
+    .page-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .section-title {
+      color: var(--dark-text-primary);
+    }
+    
+    // 积分概览卡片
+    .overview-card {
+      background: var(--dark-card-bg) !important;
+      
+      &__header {
+        h2 {
+          color: var(--dark-text-primary);
+        }
+      }
+      
+      &__stats {
+        .stat-box {
+          background: var(--dark-border);
+          
+          &__label {
+            color: var(--dark-text-secondary);
+          }
+          
+          &__value {
+            color: var(--dark-text-primary);
+          }
+        }
+      }
+    }
+    
+    // 本周表现柱状图
+    .week-chart {
+      background: var(--dark-card-bg);
+      
+      .day-column {
+        &__bar-container {
+          background: var(--dark-border);
+        }
+        
+        &__bar {
+          background: linear-gradient(180deg, var(--primary-light), var(--primary-color));
+        }
+        
+        &__label {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__points {
+          color: var(--dark-text-primary);
+        }
+      }
+    }
+    
+    // 分类统计
+    .category-stats {
+      .category-item {
+        background: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__header {
+          &__icon {
+            filter: none;
+          }
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__count {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__points {
+          color: var(--dark-text-primary);
+        }
+        
+        &__percentage {
+          .progress-bar {
+            background: var(--dark-border);
+          }
+        }
+      }
+    }
+    
+    // 最近记录
+    .records-list {
+      .record-item {
+        background: var(--dark-card-bg);
+        border-bottom-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__date {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 首页快捷记录模态框
+  .quick-record-modal {
+    background: var(--dark-card-bg);
+    
+    .modal-header {
+      background: var(--dark-card-bg);
+      border-bottom-color: var(--dark-border);
+      
+      h3 {
+        color: var(--dark-text-primary);
+      }
+    }
+    
+    .modal-content {
+      .rule-option {
+        background: var(--dark-bg);
+        color: var(--dark-text-primary);
+        
+        &:hover {
+          background: var(--dark-border);
+          
+          .rule-option__points {
+            color: white;
+          }
+        }
+        
+        &.completed {
+          opacity: 0.6;
+          background: rgba(16, 185, 129, 0.05);
+        }
+        
+        &__icon {
+          filter: none;
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__points {
+          color: var(--dark-text-secondary);
+        }
+        
+        .completed-badge {
+          background: var(--success-color);
+          color: white;
+        }
+        
+        .completed-flag {
+          background: var(--dark-text-muted);
+          color: white;
+        }
+      }
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+  }
+  
+  // ✅ 积分规则管理页面（完整深色模式）
+  .rule-list-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      .page-title {
+        color: var(--dark-text-primary);
+      }
+    }
+    
+    .search-box {
+      .input {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-primary);
+        
+        &::placeholder {
+          color: var(--dark-text-muted);
+        }
+      }
+    }
+    
+    .category-filter {
+      .filter-tab {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &.active {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    .section-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+    
+    .rules-list {
+      .rule-card {
+        background: var(--dark-card-bg);
+        box-shadow: var(--dark-shadow);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__meta {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__desc {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__icon {
+          filter: none;
+        }
+      }
+    }
+    
+    .category-tag {
+      background: var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+    
+    .icon-btn {
+      background: var(--dark-border);
+      color: var(--dark-text-primary);
+      
+      &:hover {
+        background: var(--primary-color);
+        color: white;
+      }
+      
+      &.active {
+        background: var(--success-color);
+        color: white;
+      }
+      
+      &.danger:hover {
+        background: var(--danger-color);
+        color: white;
+      }
+    }
+  }
+  
+  // ✅ 积分规则编辑页面（完整深色模式）
+  .rule-edit-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .form-label {
+      color: var(--dark-text-primary);
+    }
+    
+    .input {
+      background-color: var(--dark-card-bg);
+      border-color: var(--dark-border);
+      color: var(--dark-text-primary);
+      
+      &:focus {
+        border-color: var(--primary-color);
+      }
+      
+      &::placeholder {
+        color: var(--dark-text-muted);
+      }
+    }
+    
+    select.input {
+      option {
+        background-color: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+      }
+    }
+    
+    .radio-label {
+      color: var(--dark-text-primary);
+    }
+    
+    .icon-preview {
+      background: var(--dark-card-bg);
+      
+      &__tip {
+        color: var(--dark-text-secondary);
+      }
+    }
+    
+    .switch {
+      background: var(--dark-border);
+      
+      &.active {
+        background: var(--primary-color);
+      }
+      
+      &__knob {
+        background: white;
+      }
+    }
+    
+    // 单选按钮组
+    .radio-group {
+      .radio-label {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        
+        &:has(input:checked) {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    // 图标选择器
+    .icon-selector {
+      &__preview {
+        background: var(--dark-card-bg);
+      }
+      
+      &__grid {
+        .icon-option {
+          background: var(--dark-card-bg);
+          
+          &.selected {
+            background: var(--primary-color);
+          }
+        }
+      }
+    }
+  }
+  
+  // ✅ 兑换商品管理页面（完整深色模式）
+  .reward-list-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      .page-title {
+        color: var(--dark-text-primary);
+      }
+    }
+    
+    .search-box {
+      .input {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-primary);
+        
+        &::placeholder {
+          color: var(--dark-text-muted);
+        }
+      }
+    }
+    
+    .filter-bar {
+      .filter-chip {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &.active {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    .section-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+    
+    .items-list {
+      .item-row {
+        background: var(--dark-card-bg);
+        border-bottom-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__desc {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__limit {
+          color: var(--dark-text-muted);
+        }
+        
+        &__points {
+          color: var(--dark-text-primary);
+        }
+      }
+    }
+  }
+  
+  // ✅ 兑换商品编辑页面（完整深色模式）
+  .reward-form-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .form-label {
+      color: var(--dark-text-primary);
+    }
+    
+    .input,
+    textarea {
+      background-color: var(--dark-card-bg);
+      border-color: var(--dark-border);
+      color: var(--dark-text-primary);
+      
+      &:focus {
+        border-color: var(--primary-color);
+      }
+      
+      &::placeholder {
+        color: var(--dark-text-muted);
+      }
+    }
+    
+    .icon-preview {
+      background: var(--dark-card-bg);
+      
+      &__tip {
+        color: var(--dark-text-secondary);
+      }
+    }
+    
+    .switch {
+      background: var(--dark-border);
+      
+      &.active {
+        background: var(--primary-color);
+      }
+      
+      &__knob {
+        background: white;
+      }
+    }
+    
+    // 单选按钮组
+    .radio-group {
+      .radio-label {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        
+        &:has(input:checked) {
+          background: var(--primary-color);
+          color: white;
+        }
+      }
+    }
+    
+    // 图标选择器
+    .icon-selector {
+      &__preview {
+        background: var(--dark-card-bg);
+      }
+      
+      &__grid {
+        .icon-option {
+          background: var(--dark-card-bg);
+          
+          &.selected {
+            background: var(--primary-color);
+          }
+        }
+      }
+    }
+  }
+  
+  // ✅ 手工补录页面（完整深色模式）
+  .record-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg);
+      
+      .page-title {
+        color: var(--dark-text-primary);
+      }
+    }
+    
+    .date-selector {
+      background: var(--dark-card-bg);
+      color: var(--dark-text-primary);
+      
+      &__current {
+        color: var(--dark-text-primary);
+      }
+      
+      &__info {
+        color: var(--dark-text-secondary);
+      }
+    }
+    
+    .mode-switch {
+      background: var(--dark-card-bg);
+      
+      .mode-option {
+        color: var(--dark-text-secondary);
+        
+        &.active {
+          color: var(--primary-color);
+        }
+      }
+    }
+    
+    .section-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .empty-state {
+      color: var(--dark-text-secondary);
+    }
+    
+    .rules-grid {
+      .rule-card {
+        background: var(--dark-card-bg);
+        color: var(--dark-text-primary);
+        border-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__points {
+          color: var(--dark-text-secondary);
+        }
+        
+        &__icon {
+          filter: none;
+        }
+      }
+    }
+    
+    .records-list {
+      .record-item {
+        background: var(--dark-card-bg);
+        border-bottom-color: var(--dark-border);
+        
+        &:hover {
+          background: var(--dark-border);
+        }
+        
+        &__name {
+          color: var(--dark-text-primary);
+        }
+        
+        &__time {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+  }
+  
+  // ✅ 底部导航栏深色模式
+  .tabbar {
+    background: var(--dark-card-bg);
+    border-top-color: var(--dark-border);
+    
+    &__item {
+      color: var(--dark-text-secondary);
+      
+      &:hover {
+        color: var(--dark-text-primary);
+      }
+      
+      &--active {
+        color: var(--primary-color);
+      }
+    }
+  }
+  
+  // ✅ Toast 组件深色模式
+  .toast-container {
+    .toast {
+      // Toast 本身已经是深色背景，保持即可
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+  
+  // ✅ ConfirmDialog 组件深色模式
+  .confirm-overlay {
+    .confirm-modal {
+      background: var(--dark-card-bg);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      
+      &__title {
+        color: var(--dark-text-primary);
+      }
+      
+      &__content {
+        color: var(--dark-text-secondary);
+      }
+      
+      &__icon {
+        &--warning,
+        &--danger,
+        &--info {
+          filter: none;
+        }
+      }
+    }
+  }
+}
+
+// 底部导航
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-around;
+  z-index: 1000;
+  
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    color: var(--text-secondary);
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+    
+    &--active {
+      color: var(--primary-color);
+    }
+    
+    &__icon {
+      font-size: 24px;
+      
+      &--highlight {
+        font-size: 32px;
+        filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3));
+      }
+    }
+  }
+}
+
+// 应用容器
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--bg-color) !important;
+  position: relative;
+  padding-bottom: 70px; // 为底部导航留空间
+  
+  // 深色模式
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--dark-bg) !important;
+  }
+}
+
+// ✅ APP 专用：禁用滚动回弹/拖拽缓冲效果（仅在 Capacitor 环境中）
+body.capacitor .app-container {
+  overscroll-behavior-y: none;
+}
+
+// 卡片样式
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+// 按钮样式
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 8px;
+  
+  &:active {
+    transform: scale(0.98);
+  }
+  
+  &--primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+    }
+  }
+  
+  &--success {
+    background: var(--success-color);
+    color: white;
+  }
+  
+  &--warning {
+    background: var(--warning-color);
+    color: white;
+  }
+  
+  &--danger {
+    background: var(--danger-color);
+    color: white;
+  }
+  
+  &--outline {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+  }
+}
+
+// 输入框样式
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+}
+
+// 标签页
+.tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &--active {
+    background: var(--primary-color);
+    color: white;
+  }
+}
+
+// 动画效果
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-leave-to {
+  transform: translateX(-100%);
+}
+
+// 工具类
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+.text-warning {
+  color: var(--warning-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.mt-1 { margin-top: var(--spacing-sm); }
+.mt-2 { margin-top: var(--spacing-md); }
+.mt-3 { margin-top: var(--spacing-lg); }
+.mt-4 { margin-top: var(--spacing-xl); }
+
+.mb-1 { margin-bottom: var(--spacing-sm); }
+.mb-2 { margin-bottom: var(--spacing-md); }
+.mb-3 { margin-bottom: var(--spacing-lg); }
+.mb-4 { margin-bottom: var(--spacing-xl); }
+
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.gap-1 { gap: var(--spacing-sm); }
+.gap-2 { gap: var(--spacing-md); }
+.gap-3 { gap: var(--spacing-lg); }

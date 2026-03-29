@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6366F1</color>
+    <color name="colorPrimaryDark">#4F46E5</color>
+    <color name="colorAccent">#6366F1</color>
+    
+    <!-- 状态栏颜色 - 浅色模式 -->
+    <color name="statusBarColor_light">#F9FAFB</color>
+    
+    <!-- 状态栏颜色 - 深色模式 -->
+    <color name="statusBarColor_dark">#1F2937</color>
+</resources>
