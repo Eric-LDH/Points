@@ -29,8 +29,8 @@ export const CycleLimiter = {
       }
     }
 
-    // 筛选当前周期的记录
-    const periodRecords = this.filterByCycle(records, item.cycleType, childId, date)
+    // 筛选当前周期的记录（只统计该商品的兑换次数）
+    const periodRecords = this.filterByCycle(records, item.cycleType, childId, date, item.id)
     const used = periodRecords.length
 
     return {
@@ -49,7 +49,8 @@ export const CycleLimiter = {
     records: ExchangeRecord[],
     cycleType: string,
     childId: string,
-    date: Date
+    date: Date,
+    itemId?: string  // 新增商品 ID 参数
   ): ExchangeRecord[] {
     const startDate = this.getCycleStartDate(cycleType, date)
     
@@ -58,7 +59,8 @@ export const CycleLimiter = {
       return (
         record.childId === childId &&
         recordDate >= startDate &&
-        recordDate <= date
+        recordDate <= date &&
+        (!itemId || record.itemId === itemId)  // 如果指定了 itemId，则只过滤该商品的记录
       )
     })
   },

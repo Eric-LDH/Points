@@ -350,7 +350,8 @@ html.dark,
   // 按钮
   .btn--outline {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    font-weight: 600;
+    color: white;
   }
   
   // 日期选择器
@@ -1731,6 +1732,7 @@ body.capacitor .app-container {
     background: transparent;
     border: 2px solid var(--primary-color);
     color: var(--primary-color);
+    font-weight: 600;
   }
 }
 

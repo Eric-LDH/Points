@@ -19,7 +19,7 @@
       <div class="items-grid">
         <div 
           v-for="item in hotItems" 
-          :key="item.id"
+          :key="`hot-${item.id}-${exchangeRecords.length}`"
           class="item-card"
         >
           <div class="item-card__header">
@@ -35,7 +35,7 @@
             :disabled="!canExchange(item)"
             @click="exchange(item)"
           >
-            {{ getExchangeButtonText(item) }}
+            {{ getExchangeButtonText(item, item.id) }}
           </button>
         </div>
       </div>
@@ -51,7 +51,7 @@
       <div v-else class="items-list">
         <div 
           v-for="item in enabledRewardItems" 
-          :key="item.id"
+          :key="`list-${item.id}-${exchangeRecords.length}`"
           class="item-row"
         >
           <div class="item-row__left">
@@ -80,7 +80,7 @@
 
     <!-- 兑换记录入口 -->
     <div class="section">
-      <button class="btn btn--outline btn--full" @click="showRecords = true">
+      <button class="btn btn--primary btn--full" @click="showRecords = true">
         📝 查看兑换记录
       </button>
     </div>
@@ -109,11 +109,20 @@
                   </div>
                 </div>
               </div>
-              <div class="record-item__points">-{{ record.totalPoints }}</div>
+              <div class="record-item__right">
+                <div class="record-item__points">-{{ record.totalPoints }}</div>
+                <button 
+                  v-if="record.status === 'pending'"
+                  class="btn btn--danger btn--sm"
+                  @click="cancelExchange(record)"
+                >
+                  取消
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <button class="btn btn--outline modal-close" @click="showRecords = false">
+        <button class="btn btn--primary modal-close" @click="showRecords = false">
           关闭
         </button>
       </div>
@@ -129,6 +138,7 @@ import type { RewardItem, ExchangeRecord } from '@/types'
 import { showToast } from '@/utils/toast'
 import { showConfirm } from '@/utils/confirm'
 import { useModalLock } from '@/composables/useModalLock'
+import { Storage } from '@/utils/storage'
 
 const store = useAppStore()
 
@@ -147,8 +157,48 @@ onMounted(() => {
 })
 
 const hotItems = computed(() => {
-  // 简单逻辑：取前 4 个启用的商品
-  return enabledRewardItems.value.slice(0, 4)
+  if (exchangeRecords.value.length === 0) {
+    // 如果没有兑换记录，取前 4 个启用的商品
+    return enabledRewardItems.value.slice(0, 4)
+  }
+  
+  // 统计每个商品的兑换次数
+  const exchangeCountMap = new Map<string, number>()
+  exchangeRecords.value.forEach(record => {
+    const count = exchangeCountMap.get(record.itemId) || 0
+    exchangeCountMap.set(record.itemId, count + 1)
+  })
+  
+  // 筛选出有兑换记录的商品，并按兑换次数降序排序
+  const itemsWithExchanges = enabledRewardItems.value
+    .filter(item => exchangeCountMap.has(item.id))
+    .sort((a, b) => {
+      const countA = exchangeCountMap.get(a.id) || 0
+      const countB = exchangeCountMap.get(b.id) || 0
+      return countB - countA // 降序
+    })
+  
+  // 如果所有商品都没有兑换记录，返回前 4 个
+  if (itemsWithExchanges.length === 0) {
+    return enabledRewardItems.value.slice(0, 4)
+  }
+  
+  // 如果兑换过的商品不足 4 个，用未兑换过的商品补齐
+  if (itemsWithExchanges.length < 4) {
+    // 获取未兑换过的商品（保持原有顺序）
+    const itemsWithoutExchanges = enabledRewardItems.value.filter(
+      item => !exchangeCountMap.has(item.id)
+    )
+    
+    // 计算需要补齐的数量
+    const needToAdd = 4 - itemsWithExchanges.length
+    
+    // 将已兑换的和未兑换的合并
+    return [...itemsWithExchanges, ...itemsWithoutExchanges.slice(0, needToAdd)]
+  }
+  
+  // 如果兑换过的商品超过或等于 4 个，只取前 4 个
+  return itemsWithExchanges.slice(0, 4)
 })
 
 const canExchange = (item: RewardItem) => {
@@ -164,7 +214,7 @@ const canExchange = (item: RewardItem) => {
   return result.canExchange
 }
 
-const getExchangeButtonText = (item: RewardItem) => {
+const getExchangeButtonText = (item: RewardItem, itemId?: string) => {
   if (totalPoints.value < item.points) {
     return '积分不足'
   }
@@ -177,11 +227,16 @@ const getExchangeButtonText = (item: RewardItem) => {
     store.currentChildId
   )
   
-  if (!result.canExchange) {
-    return result.message
-  }
+  // if (!result.canExchange) {
+  //   return result.message
+  // }
   
-  return `兑换 (${result.remaining}次)`
+  // 统计该商品已兑换的总次数
+  const usedCount = exchangeRecords.value.filter(
+    record => record.itemId === item.id && record.childId === store.currentChildId
+  ).length
+  
+  return `兑换 (已兑${usedCount}次)`
 }
 
 const getCycleName = (cycleType: string) => {
@@ -242,8 +297,52 @@ const formatDate = (dateStr: string) => {
 }
 
 const getUsedCount = (record: ExchangeRecord) => {
-  // 简单实现，实际应该查询周期内的记录数
-  return 1
+  // 查询该商品在当前周期内的兑换次数
+  const result = CycleLimiter.canExchange(
+    {
+      id: record.itemId,
+      name: record.itemName,
+      points: record.points,
+      icon: record.itemIcon,
+      description: '',
+      cycleType: record.cycleType as any,
+      cycleLimit: record.cycleLimit,
+      enabled: true,
+      sortOrder: 0,
+      createdAt: '',
+      updatedAt: ''
+    },
+    exchangeRecords.value,
+    record.childId || store.currentChildId || ''
+  )
+  return result.used
+}
+
+// 取消兑换
+const cancelExchange = async (record: ExchangeRecord) => {
+  const confirmed = await showConfirm({
+    title: '取消兑换',
+    message: `确定要取消"${record.itemName}"的兑换吗？\n将退还${record.totalPoints}积分`,
+    confirmText: '确定',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
+    // 从 store 中删除该记录
+    store.exchangeRecords = store.exchangeRecords.filter(r => r.id !== record.id)
+    Storage.exchangeRecords.delete(record.id)
+    
+    // 退还积分
+    if (record.childId) {
+      const child = store.children.find(c => c.id === record.childId)
+      if (child) {
+        child.currentPoints += record.totalPoints
+        Storage.children.update(child.id, child)
+      }
+    }
+    
+    showToast({ message: '已取消兑换并退还积分', type: 'success' })
+  }
 }
 </script>
 
@@ -502,6 +601,13 @@ const getUsedCount = (record: ExchangeRecord) => {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+  }
+  
+  &__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-xs);
   }
   
   &__icon {
