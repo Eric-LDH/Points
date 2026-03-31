@@ -80,6 +80,30 @@ watch(confirmVisible, (newVal: boolean) => {
   }
 })
 
+/**
+ * 更新状态栏样式（根据深色/浅色模式）
+ */
+const updateStatusBarStyle = async (isDark: boolean) => {
+  try {
+    const capacitor = (window as any).Capacitor
+    if (capacitor && capacitor.isNativePlatform()) {
+      // 更新状态栏背景色
+      await StatusBar.setBackgroundColor({ 
+        color: isDark ? '#1F2937' : '#F9FAFB' 
+      })
+      
+      // 更新状态栏图标颜色（深色模式用浅色图标，浅色模式用深色图标）
+      await StatusBar.setStyle({ 
+        style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
+      })
+      
+      console.log('状态栏样式已更新:', isDark ? '深色' : '浅色')
+    }
+  } catch (error) {
+    console.error('更新状态栏样式失败:', error)
+  }
+}
+
 // 监听深色模式切换，同步更新状态栏
 watch(darkMode, async (newVal: boolean) => {
   await updateStatusBarStyle(newVal)
@@ -108,30 +132,6 @@ const initStatusBar = async () => {
     }
   } catch (error) {
     console.error('初始化状态栏失败:', error)
-  }
-}
-
-/**
- * 更新状态栏样式（根据深色/浅色模式）
- */
-const updateStatusBarStyle = async (isDark: boolean) => {
-  try {
-    const capacitor = (window as any).Capacitor
-    if (capacitor && capacitor.isNativePlatform()) {
-      // 更新状态栏背景色
-      await StatusBar.setBackgroundColor({ 
-        color: isDark ? '#1F2937' : '#F9FAFB' 
-      })
-      
-      // 更新状态栏图标颜色（深色模式用浅色图标，浅色模式用深色图标）
-      await StatusBar.setStyle({ 
-        style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
-      })
-      
-      console.log('状态栏样式已更新:', isDark ? '深色' : '浅色')
-    }
-  } catch (error) {
-    console.error('更新状态栏样式失败:', error)
   }
 }
 

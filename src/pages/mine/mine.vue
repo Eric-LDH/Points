@@ -507,6 +507,14 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow);
+  // 防止圆角处透出白色边 - 创建层叠上下文
+  isolation: isolate;
+  
+  // 为每个菜单项添加样式，确保与父容器背景一致
+  .menu-item {
+    // 使用与父容器相同的背景色，避免透出
+    background-color: inherit;
+  }
 }
 
 .menu-item {
@@ -514,11 +522,13 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-lg);
-  background: var(--card-bg);
+  // 使用 inherit 从父容器继承背景色，避免圆角处透白边
+  background-color: inherit;
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.2s ease;
   
+  // 确保最后一个元素的圆角处不透明
   &:last-child {
     border-bottom: none;
   }

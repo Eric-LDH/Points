@@ -240,6 +240,11 @@ html.dark,
     }
   }
   
+  // 菜单列表容器
+  .menu-list {
+    background: var(--dark-card-bg);
+  }
+  
   // 备份信息
   .backup-info {
     &__label {
