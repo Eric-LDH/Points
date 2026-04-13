@@ -29,6 +29,7 @@ const store = useAppStore()
 const menuItems = [
   { path: '/index', icon: '🏠', title: '首页', highlight: false },
   { path: '/stats', icon: '📊', title: '统计', highlight: false },
+  { path: '/lucky', icon: '🍀', title: '幸运', highlight: false },
   { path: '/exchange', icon: '🎁', title: '兑换', highlight: false },
   { path: '/mine', icon: '👤', title: '我的', highlight: false }
 ]

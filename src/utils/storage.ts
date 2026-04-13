@@ -1,4 +1,4 @@
-import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData } from '@/types'
+import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData, LuckyTask } from '@/types'
 
 const STORAGE_KEYS = {
   RULES: 'points_rules',
@@ -6,7 +6,8 @@ const STORAGE_KEYS = {
   POINTS_RECORDS: 'points_records',
   EXCHANGE_RECORDS: 'points_exchange_records',
   CHILDREN: 'points_children',
-  CURRENT_CHILD_ID: 'points_current_child_id'
+  CURRENT_CHILD_ID: 'points_current_child_id',
+  LUCKY_TASKS: 'points_lucky_tasks' // 幸运任务配置列表
 }
 
 export const Storage = {
@@ -199,6 +200,41 @@ export const Storage = {
   },
 
   /**
+   * 幸运任务管理
+   */
+  luckyTasks: {
+    getAll(): LuckyTask[] {
+      const data = localStorage.getItem(STORAGE_KEYS.LUCKY_TASKS)
+      return data ? JSON.parse(data) : []
+    },
+
+    save(tasks: LuckyTask[]): void {
+      localStorage.setItem(STORAGE_KEYS.LUCKY_TASKS, JSON.stringify(tasks))
+    },
+
+    add(task: LuckyTask): void {
+      const tasks = this.getAll()
+      tasks.push(task)
+      this.save(tasks)
+    },
+
+    update(id: string, updates: Partial<LuckyTask>): void {
+      const tasks = this.getAll()
+      const index = tasks.findIndex(t => t.id === id)
+      if (index !== -1) {
+        tasks[index] = { ...tasks[index], ...updates, updatedAt: new Date().toISOString() }
+        this.save(tasks)
+      }
+    },
+
+    delete(id: string): void {
+      const tasks = this.getAll()
+      const filtered = tasks.filter(t => t.id !== id)
+      this.save(filtered)
+    }
+  },
+
+  /**
    * 备份与恢复
    */
   backup(): BackupData {
@@ -208,6 +244,7 @@ export const Storage = {
       pointsRecords: this.pointsRecords.getAll(),
       exchangeRecords: this.exchangeRecords.getAll(),
       children: this.children.getAll(),
+      luckyTasks: this.luckyTasks.getAll(),
       backupAt: new Date().toISOString(),
       version: '1.0.0'
     }
@@ -220,6 +257,7 @@ export const Storage = {
     if (data.pointsRecords) this.pointsRecords.save(data.pointsRecords)
     if (data.exchangeRecords) this.exchangeRecords.save(data.exchangeRecords)
     if (data.children) this.children.save(data.children)
+    if (data.luckyTasks) this.luckyTasks.save(data.luckyTasks)
   },
 
   exportToFile(): void {

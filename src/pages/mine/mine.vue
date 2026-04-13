@@ -36,6 +36,13 @@
           </div>
           <span class="menu-item__arrow">›</span>
         </div>
+        <div class="menu-item" @click="goToLuckyConfig">
+          <div class="menu-item__left">
+            <span class="menu-item__icon">🍀</span>
+            <span class="menu-item__title">幸运任务配置</span>
+          </div>
+          <span class="menu-item__arrow">›</span>
+        </div>
       </div>
     </div>
 
@@ -336,6 +343,10 @@ const goToRuleList = () => {
 
 const goToRewardManage = () => {
   router.push('/reward/list')
+}
+
+const goToLuckyConfig = () => {
+  router.push('/lucky/config')
 }
 
 const goToRecord = () => {

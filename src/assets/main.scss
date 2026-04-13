@@ -93,7 +93,8 @@ html, body {
 .reward-list-page .header,
 .record-page .header,
 .rule-edit-page .header,
-.reward-form-page .header {
+.reward-form-page .header,
+.lucky-config-page .header {
   position: fixed;
   top: 0;
   left: 50%;
@@ -1606,6 +1607,143 @@ html.dark,
         &--danger,
         &--info {
           filter: none;
+        }
+      }
+    }
+  }
+  
+  // ✅ 幸运任务主页 - 深色模式适配
+  .lucky-page {
+    background-color: var(--dark-bg);
+    
+    .page-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .trigger-section {
+      background: var(--dark-card-bg);
+    }
+    
+    .task-display {
+      background: var(--dark-card-bg);
+      
+      .task-header {
+        .task-title {
+          color: var(--dark-text-primary);
+        }
+      }
+      
+      .task-content {
+        background: var(--dark-border);
+        
+        .task-description {
+          color: var(--dark-text-primary);
+        }
+        
+        .task-time {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+    
+    .empty-state {
+      background: var(--dark-card-bg);
+      color: var(--dark-text-secondary);
+    }
+    
+    .info-section {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+      
+      .info-content {
+        .info-text {
+          color: var(--dark-text-secondary);
+        }
+      }
+    }
+  }
+  
+  // ✅ 幸运任务配置页 - 深色模式适配
+  .lucky-config-page {
+    background-color: var(--dark-bg);
+    
+    .header {
+      background-color: var(--dark-bg) !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .empty-state {
+      background: var(--dark-card-bg);
+      color: var(--dark-text-secondary);
+      
+      .empty-hint {
+        color: var(--dark-text-muted);
+      }
+    }
+    
+    .task-list {
+      .task-item {
+        background: var(--dark-card-bg);
+        
+        &:hover {
+          box-shadow: var(--dark-shadow);
+        }
+        
+        &__text {
+          color: var(--dark-text-primary);
+        }
+        
+        &__actions {
+          .btn-icon {
+            border-color: var(--dark-border);
+            color: var(--dark-text-primary);
+            
+            &:hover {
+              background: var(--dark-border);
+            }
+            
+            &.btn-edit:hover {
+              background: rgba(99, 102, 241, 0.2);
+              border-color: var(--primary-light);
+            }
+            
+            &.btn-delete:hover {
+              background: rgba(239, 68, 68, 0.2);
+              border-color: #F87171;
+            }
+          }
+        }
+      }
+    }
+    
+    .modal-overlay {
+      .modal {
+        background: var(--dark-card-bg);
+        
+        .modal-title {
+          color: var(--dark-text-primary);
+        }
+        
+        .form-group {
+          .form-label {
+            color: var(--dark-text-primary);
+          }
+          
+          .textarea {
+            background-color: var(--dark-card-bg);
+            border-color: var(--dark-border);
+            color: var(--dark-text-primary);
+            
+            &:focus {
+              border-color: var(--primary-color);
+            }
+            
+            &::placeholder {
+              color: var(--dark-text-muted);
+            }
+          }
         }
       }
     }

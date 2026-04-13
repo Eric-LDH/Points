@@ -19,6 +19,18 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '统计', icon: '📊' }
   },
   {
+    path: '/lucky',
+    name: 'Lucky',
+    component: () => import('@/pages/lucky/lucky.vue'),
+    meta: { title: '幸运任务', icon: '🍀' }
+  },
+  {
+    path: '/lucky/config',
+    name: 'LuckyConfig',
+    component: () => import('@/pages/lucky/config.vue'),
+    meta: { title: '幸运任务配置' }
+  },
+  {
     path: '/record',
     name: 'Record',
     component: () => import('@/pages/record/record.vue'),

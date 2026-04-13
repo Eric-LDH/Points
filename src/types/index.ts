@@ -70,6 +70,14 @@ export interface Child {
   totalPoints: number
 }
 
+// 幸运任务模型
+export interface LuckyTask {
+  id: string
+  description: string // 任务描述文本
+  createdAt: string
+  updatedAt: string
+}
+
 // 备份数据模型
 export interface BackupData {
   rules: Rule[]
@@ -77,6 +85,7 @@ export interface BackupData {
   pointsRecords: PointsRecord[]
   exchangeRecords: ExchangeRecord[]
   children: Child[]
+  luckyTasks?: LuckyTask[] // 可选，兼容旧版本
   backupAt: string
   version: string
 }

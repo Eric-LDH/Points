@@ -51,7 +51,7 @@ const { confirmVisible, confirmTitle, confirmMessage, confirmType, showConfirm, 
 
 const showTabbar = computed(() => {
   // 底部导航显示在主要页面
-  const mainRoutes = ['/', '/index', '/stats', '/record', '/exchange', '/mine']
+  const mainRoutes = ['/', '/index', '/stats', '/lucky', '/exchange', '/mine']
   return mainRoutes.includes(route.path)
 })
 
@@ -174,7 +174,7 @@ onMounted(async () => {
       }
       
       // 如果在子页面（非主页面），返回上一级
-      const mainRoutes = ['/', '/index', '/stats', '/record', '/exchange', '/mine']
+      const mainRoutes = ['/', '/index', '/stats', '/lucky', '/exchange', '/mine']
       if (!mainRoutes.includes(route.path)) {
         router.back()
       } else {
