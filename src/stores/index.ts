@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child } from '@/types'
+import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, LuckyTask } from '@/types'
 import { IconGenerator } from '@/utils/iconGenerator'
 import { Storage } from '@/utils/storage'
 
@@ -13,6 +13,7 @@ export const useAppStore = defineStore('app', () => {
   const children = ref<Child[]>([])
   const currentChildId = ref<string | null>(null)
   const darkMode = ref<boolean>(false)
+  const luckyTasks = ref<LuckyTask[]>([])
 
   // 从 localStorage 加载数据
   function loadFromStorage() {
@@ -22,6 +23,7 @@ export const useAppStore = defineStore('app', () => {
     exchangeRecords.value = Storage.exchangeRecords.getAll()
     children.value = Storage.children.getAll()
     currentChildId.value = Storage.children.getCurrentId()
+    luckyTasks.value = Storage.luckyTasks.getAll()
     // 加载深色模式设置
     const savedDarkMode = localStorage.getItem('darkMode')
     if (savedDarkMode !== null) {
@@ -293,6 +295,7 @@ export const useAppStore = defineStore('app', () => {
         pointsRecords: pointsRecords.value,
         exchangeRecords: exchangeRecords.value,
         children: children.value,
+        luckyTasks: luckyTasks.value,
         backupAt: new Date().toISOString(),
         version: '1.0.0'
       }
@@ -336,6 +339,33 @@ export const useAppStore = defineStore('app', () => {
     
     // 重新加载数据
     loadFromStorage()
+  }
+
+  // 幸运任务管理
+  function addLuckyTask(taskData: Omit<LuckyTask, 'id' | 'createdAt' | 'updatedAt'>) {
+    const newTask: LuckyTask = {
+      ...taskData,
+      id: `lucky_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    Storage.luckyTasks.add(newTask)
+    luckyTasks.value.push(newTask)
+    return newTask
+  }
+
+  function updateLuckyTask(id: string, updates: Partial<LuckyTask>) {
+    const { createdAt, ...safeUpdates } = updates
+    Storage.luckyTasks.update(id, safeUpdates)
+    const index = luckyTasks.value.findIndex(t => t.id === id)
+    if (index !== -1) {
+      luckyTasks.value[index] = { ...luckyTasks.value[index], ...safeUpdates }
+    }
+  }
+
+  function deleteLuckyTask(id: string) {
+    Storage.luckyTasks.delete(id)
+    luckyTasks.value = luckyTasks.value.filter(t => t.id !== id)
   }
 
   // 切换深色模式
@@ -388,6 +418,11 @@ export const useAppStore = defineStore('app', () => {
     exportBackup,
     importBackup,
     toggleDarkMode,
-    refreshData
+    refreshData,
+    // 幸运任务管理
+    luckyTasks,
+    addLuckyTask,
+    updateLuckyTask,
+    deleteLuckyTask
   }
 })

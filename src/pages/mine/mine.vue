@@ -371,6 +371,7 @@ const exportBackup = async () => {
       pointsRecords: store.pointsRecords,
       exchangeRecords: store.exchangeRecords,
       children: store.children,
+      luckyTasks: store.luckyTasks,
       backupAt: new Date().toISOString(),
       version: '1.0.0'
     }
