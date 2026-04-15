@@ -119,12 +119,10 @@ export const useAppStore = defineStore('app', () => {
   }
 
   // 规则管理
-  function addRule(ruleData: Omit<Rule, 'id' | 'icon' | 'createdAt' | 'updatedAt'>) {
-    const icon = IconGenerator.generate(ruleData.category)
+  function addRule(ruleData: Omit<Rule, 'id' | 'createdAt' | 'updatedAt'>) {
     const newRule: Rule = {
       ...ruleData,
       id: `rule_${Date.now()}`,
-      icon,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }

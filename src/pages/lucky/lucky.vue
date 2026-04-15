@@ -5,7 +5,7 @@
     <!-- 触发按钮 -->
     <div class="trigger-section card">
       <div class="trigger-content">
-        <span class="trigger-icon">✨</span>
+        <span class="trigger-icon">🎲</span>
         <button 
           class="btn btn--primary btn--lg trigger-btn"
           @click="drawLuckyTask"

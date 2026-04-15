@@ -66,10 +66,22 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">图标（自动生成）</label>
-        <div class="icon-preview">
-          <span class="icon-preview__icon">{{ previewIcon }}</span>
-          <span class="icon-preview__tip">根据分类随机生成</span>
+        <label class="form-label">图标</label>
+        <div class="icon-selector">
+          <div class="icon-selector__preview">
+            <span class="icon-preview__icon">{{ formData.icon || '❓' }}</span>
+          </div>
+          <div class="icon-selector__grid">
+            <span 
+              v-for="icon in icons" 
+              :key="icon"
+              class="icon-option"
+              :class="{ selected: formData.icon === icon }"
+              @click="formData.icon = icon"
+            >
+              {{ icon }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -123,16 +135,14 @@ const formData = ref({
   category: '' as Rule['category'] | '',
   type: 'reward' as Rule['type'],
   points: 2,
+  icon: '📋' as string,
   description: '' as string,
   enabled: true,
   sortOrder: 999
 })
 
-// 预览图标
-const previewIcon = computed(() => {
-  if (!formData.value.category) return '❓'
-  return IconGenerator.generate(formData.value.category)
-})
+// 图标选项列表
+const icons = ['📋', '🧹', '👕', '🍽️', '📚', '✏️', '⏰', '🛏️', '🚿', '🦷', '🏃', '🎨', '🎵', '💪', '⭐', '🎯', '✅', '❌', '⚠️', '🔥']
 
 // 监听类型变化，自动设置默认分类
 watch(() => formData.value.type, (newType) => {
@@ -164,6 +174,7 @@ onMounted(() => {
       category: rule.category,
       type: rule.type,
       points: rule.points,
+      icon: rule.icon,
       description: rule.description || '',
       enabled: rule.enabled,
       sortOrder: rule.sortOrder
@@ -327,21 +338,38 @@ const saveRule = () => {
   }
 }
 
-.icon-preview {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--bg-color);
-  border-radius: var(--radius-md);
-  
-  &__icon {
-    font-size: 48px;
+.icon-selector {
+  &__preview {
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
   }
   
-  &__tip {
-    font-size: 13px;
-    color: var(--text-secondary);
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--spacing-sm);
+  }
+}
+
+.icon-option {
+  font-size: 28px;
+  padding: var(--spacing-sm);
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &.selected {
+    background: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
   }
 }
 
