@@ -43,7 +43,7 @@
 
     <!-- 奖励规则列表 -->
     <div class="section">
-      <h2 class="section-title">🏷️ 奖励规则 ({{ rewardRules.length }}项)</h2>
+      <h2 class="section-title"><span class="section-title__dot" />🏷️ 奖励规则 ({{ rewardRules.length }}项)</h2>
       <div v-if="rewardRules.length === 0" class="empty-state">
         <span class="empty-state__emoji">📝</span>
         <p>暂无奖励规则</p>
@@ -52,7 +52,7 @@
         <div 
           v-for="rule in rewardRules" 
           :key="rule.id"
-          class="rule-card"
+          class="rule-card glass-card"
         >
           <div class="rule-card__header">
             <div class="rule-card__left">
@@ -86,7 +86,7 @@
 
     <!-- 惩罚规则列表 -->
     <div class="section">
-      <h2 class="section-title">⚠️ 惩罚规则 ({{ penaltyRules.length }}项)</h2>
+      <h2 class="section-title"><span class="section-title__dot" />⚠️ 惩罚规则 ({{ penaltyRules.length }}项)</h2>
       <div v-if="penaltyRules.length === 0" class="empty-state">
         <span class="empty-state__emoji">✅</span>
         <p>暂无惩罚规则</p>
@@ -95,7 +95,7 @@
         <div 
           v-for="rule in penaltyRules" 
           :key="rule.id"
-          class="rule-card"
+          class="rule-card glass-card"
         >
           <div class="rule-card__header">
             <div class="rule-card__left">
@@ -201,11 +201,14 @@ const deleteRule = async (rule: Rule) => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .rule-list-page {
   // 添加顶部安全区域，避免内容被状态栏遮挡
-  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
+  animation: fade-in 0.5s ease;
   
   > *:not(.header) {
     padding-left: var(--spacing-lg);
@@ -244,7 +247,7 @@ const deleteRule = async (rule: Rule) => {
   border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   white-space: nowrap;
   
   &.active {
@@ -261,6 +264,17 @@ const deleteRule = async (rule: Rule) => {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+
+  &__dot {
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
 }
 
 .empty-state {
@@ -286,6 +300,9 @@ const deleteRule = async (rule: Rule) => {
   border-radius: var(--radius-lg);
   padding: var(--spacing-md);
   box-shadow: var(--shadow);
+  content-visibility: auto;
+  contain: paint layout style;
+  contain-intrinsic-size: 80px;
   
   &__header {
     display: flex;
@@ -366,23 +383,25 @@ const deleteRule = async (rule: Rule) => {
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 18px;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  
-  &:hover {
-    background: var(--bg-color);
-  }
   
   &.active {
     background: rgba(16, 185, 129, 0.1);
     color: var(--success-color);
   }
   
-  &.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
-  }
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -2,7 +2,9 @@
   <div class="confirm-overlay" @click="handleOverlayClick">
     <div class="confirm-modal" @click.stop>
       <div class="confirm-modal__header">
-        <span class="confirm-modal__icon" :class="`icon--${type}`">{{ icon }}</span>
+        <div class="confirm-modal__icon" :class="`icon--${type}`">
+          <IconFont :name="iconName" :size="40" />
+        </div>
         <h3 class="confirm-modal__title">{{ title }}</h3>
       </div>
       
@@ -31,6 +33,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconFont from '@/components/IconFont.vue'
 
 interface Props {
   visible: boolean
@@ -52,17 +55,26 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
-const icon = computed(() => {
-  const icons = {
-    warning: '⚠',
-    danger: '❗',
-    info: 'ℹ'
+const iconName = computed(() => {
+  const icons: Record<string, 'star' | 'close' | 'gift'> = {
+    warning: 'star',
+    danger: 'close',
+    info: 'gift'
   }
   return icons[props.type] || icons.warning
 })
 
+const iconColor = computed(() => {
+  const colors = {
+    warning: 'var(--warning-color)',
+    danger: 'var(--danger-color)',
+    info: 'var(--primary-color)'
+  }
+  return colors[props.type] || colors.warning
+})
+
 const handleOverlayClick = () => {
-  // 点击遮罩层不关闭，必须选择
+  // 点击遮罩层不关闭
 }
 
 const handleConfirm = () => {
@@ -81,45 +93,63 @@ const handleCancel = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
+  animation: overlay-in 0.25s ease;
+  padding: var(--spacing-lg);
 }
 
 .confirm-modal {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 24px;
-  max-width: 320px;
-  width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s ease;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 16px 48px rgba(99, 102, 241, 0.12);
+  animation: modal-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  .dark &, html.dark &, .app-container.dark & {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  }
 
   &__header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-lg);
   }
 
   &__icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-
-    &--warning {
-      filter: hue-rotate(0deg);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.08);
+    
+    &.icon--warning { 
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning-color);
     }
-
-    &--danger {
-      filter: hue-rotate(0deg);
+    &.icon--danger { 
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger-color);
     }
-
-    &--info {
-      filter: hue-rotate(200deg);
+    &.icon--info { 
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary-color);
     }
   }
 
@@ -135,66 +165,36 @@ const handleCancel = () => {
     color: var(--text-secondary);
     line-height: 1.6;
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-xl);
     white-space: pre-wrap;
   }
 
   &__footer {
     display: flex;
-    gap: 12px;
+    gap: var(--spacing-md);
 
     button {
       flex: 1;
       padding: 12px;
       font-size: 15px;
       font-weight: 500;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    background: var(--dark-card-bg);
-    
-    .confirm-modal__title {
-      color: var(--dark-text-primary);
-    }
-
-    .confirm-modal__content {
-      color: var(--dark-text-secondary);
-    }
-  }
-
-  // 支持 .dark 类名触发深色模式
-  .app-container.dark & {
-    background: var(--dark-card-bg);
-    
-    .confirm-modal__title {
-      color: var(--dark-text-primary);
-    }
-
-    .confirm-modal__content {
-      color: var(--dark-text-secondary);
+      border-radius: var(--radius-lg);
     }
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes modal-in {
   from {
-    transform: translateY(20px);
+    transform: scale(0.9) translateY(20px);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
     opacity: 1;
   }
 }

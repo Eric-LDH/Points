@@ -1,47 +1,64 @@
 <template>
   <div class="lucky-page">
-    <h1 class="page-title">🍀 幸运任务</h1>
+    <div class="page-header-section">
+      <h1 class="page-title">幸运任务</h1>
+      <p class="page-subtitle">每天都有新挑战</p>
+    </div>
     
-    <!-- 触发按钮 -->
-    <div class="trigger-section card">
-      <div class="trigger-content">
-        <span class="trigger-icon">🎲</span>
+    <!-- 触发区域 -->
+    <div class="lucky-hero glass-card">
+      <div class="lucky-hero__glow" />
+      <div class="lucky-hero__content">
+        <div class="lucky-hero__icon">
+          <IconFont name="clover" :size="48" color="#6366F1" />
+        </div>
         <button 
-          class="btn btn--primary btn--lg trigger-btn"
+          class="lucky-btn"
           @click="drawLuckyTask"
           :disabled="isDrawing"
         >
-          {{ isDrawing ? '抽取中...' : '领取今日幸运任务' }}
+          <span v-if="isDrawing" class="lucky-btn__loading">
+            <IconFont name="add" :size="20" color="#fff" custom-class="spinning" />
+            抽取中...
+          </span>
+          <span v-else class="lucky-btn__text">
+            <IconFont name="star" :size="18" color="#fff" />
+            领取今日幸运任务
+          </span>
         </button>
       </div>
     </div>
 
-    <!-- 今日任务展示区域 -->
-    <div v-if="todayTask" class="task-display card">
-      <div class="task-header">
-        <span class="task-emoji">🎯</span>
-        <h2 class="task-title">今日幸运任务</h2>
+    <!-- 今日任务展示 -->
+    <div v-if="todayTask" class="task-display glass-card" style="animation: slide-up 0.4s ease">
+      <div class="task-display__ribbon">
+        <IconFont name="star" :size="12" color="#fff" />
+        今日幸运任务
+        <IconFont name="star" :size="12" color="#fff" />
       </div>
-      <div class="task-content">
-        <p class="task-description">{{ todayTask.task.description }}</p>
-        <div class="task-time">
-          <span>📅 {{ formatTime(todayTask.drawnAt) }}</span>
+      <div class="task-display__body">
+        <p class="task-display__desc">{{ todayTask.task.description }}</p>
+        <div class="task-display__time">
+          <IconFont name="calendar" :size="12" color="var(--text-muted)" />
+          {{ formatTime(todayTask.drawnAt) }} 抽取
         </div>
       </div>
     </div>
 
-    <!-- 空状态提示 -->
-    <div v-else class="empty-state card">
-      <span class="empty-state__emoji">🎲</span>
-      <p>点击上方按钮，抽取你的今日幸运任务！</p>
+    <!-- 空状态 -->
+    <div v-else class="empty-state glass-card">
+      <div class="empty-state__icon-wrap">
+        <IconFont name="clover" :size="40" color="var(--text-muted)" />
+      </div>
+      <p>点击上方按钮，抽取你的今日幸运任务</p>
     </div>
 
-    <!-- 配置说明 -->
-    <div class="info-section card">
-      <div class="info-content">
-        <span class="info-icon">💡</span>
+    <!-- 配置提示 -->
+    <div class="info-card glass-card">
+      <div class="info-card__content">
+        <IconFont name="notes" :size="20" color="var(--primary-color)" />
         <div>
-          <p class="info-text">任务列表可在"我的"页面中进行配置管理</p>
+          <p class="info-card__text">任务列表可在「我的」页面中配置管理</p>
           <button class="btn btn--outline btn--sm" @click="goToConfig">
             前往配置
           </button>
@@ -57,10 +74,10 @@ import { useRouter } from 'vue-router'
 import { Storage } from '@/utils/storage'
 import type { LuckyTask } from '@/types'
 import { showToast } from '@/utils/toast'
+import IconFont from '@/components/IconFont.vue'
 
 const router = useRouter()
 
-// 今日任务数据（包含任务内容和抽取时间）
 interface TodayTask {
   task: LuckyTask
   drawnAt: string
@@ -69,218 +86,275 @@ interface TodayTask {
 const todayTask = ref<TodayTask | null>(null)
 const isDrawing = ref(false)
 
-/**
- * 随机抽取幸运任务
- * 使用 Math.random() 从配置列表中随机选择一条任务
- */
 const drawLuckyTask = () => {
-  // 获取所有配置的幸运任务
   const tasks = Storage.luckyTasks.getAll()
-  
-  // 检查是否有可用任务
   if (tasks.length === 0) {
     showToast({ message: '还没有配置任何任务，请先去配置', type: 'warning' })
     return
   }
-  
   isDrawing.value = true
-  
-  // 模拟抽取动画延迟
   setTimeout(() => {
-    // 使用 Math.random() 生成 0 到 1 之间的随机数
-    // 乘以任务数组长度并向下取整，得到随机索引
     const randomIndex = Math.floor(Math.random() * tasks.length)
     const selectedTask = tasks[randomIndex]
-    
-    // 保存今日任务及抽取时间
     todayTask.value = {
       task: selectedTask,
       drawnAt: new Date().toISOString()
     }
-    
-    // 保存到本地存储，确保刷新后仍显示今日任务
     localStorage.setItem('lucky_today_task', JSON.stringify(todayTask.value))
-    
     isDrawing.value = false
     showToast({ message: '抽取成功！祝你好运！', type: 'success' })
-  }, 500)
+  }, 600)
 }
 
-/**
- * 格式化时间显示
- */
 const formatTime = (timeStr: string) => {
   const date = new Date(timeStr)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${month}-${day} ${hours}:${minutes}`
+  return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
-/**
- * 跳转到配置页面
- */
 const goToConfig = () => {
   router.push('/lucky/config')
 }
 
 onMounted(() => {
-  // 滚动到页面顶部
   window.scrollTo(0, 0)
-  
-  // 从本地存储恢复今日任务（如果存在）
   const saved = localStorage.getItem('lucky_today_task')
   if (saved) {
-    try {
-      todayTask.value = JSON.parse(saved)
-    } catch (e) {
-      console.error('解析今日任务失败:', e)
-    }
+    try { todayTask.value = JSON.parse(saved) } catch (e) { console.error(e) }
   }
 })
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .lucky-page {
   padding: var(--spacing-lg);
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
-  background-color: var(--bg-color);
   min-height: 100vh;
+  animation: fade-in 0.5s ease;
+}
+
+.page-header-section {
+  margin-bottom: var(--spacing-xl);
 }
 
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  margin-bottom: var(--spacing-xl);
-  color: var(--text-primary);
+  margin-bottom: 2px;
+
+  .dark &, html.dark & {
+    color: var(--dark-text-primary);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    color: var(--dark-text-primary);
+  }
 }
 
-.trigger-section {
-  margin-bottom: var(--spacing-xl);
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+// ===== 幸运抽奖区域 =====
+.lucky-hero {
+  position: relative;
+  overflow: hidden;
   text-align: center;
-}
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 
-.trigger-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-.trigger-icon {
-  font-size: 64px;
-  animation: sparkle 2s infinite;
-}
-
-@keyframes sparkle {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
+  &__glow {
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+    pointer-events: none;
   }
-  50% {
-    transform: scale(1.1) rotate(5deg);
+
+  &__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+
+  &__icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 50%;
   }
 }
 
-.trigger-btn {
+.lucky-btn {
   width: 100%;
   padding: 16px 24px;
-  font-size: 18px;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: 17px;
   font-weight: 600;
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.task-display {
-  margin-bottom: var(--spacing-xl);
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.task-header {
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #A78BFA);
+  background-size: 200% 200%;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
+  justify-content: center;
+  gap: 8px;
 
-.task-emoji {
-  font-size: 32px;
-}
-
-.task-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.task-content {
-  background: var(--bg-color);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-}
-
-.task-description {
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-.task-time {
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-align: right;
-}
-
-.empty-state {
-  margin-bottom: var(--spacing-xl);
-  text-align: center;
-  padding: var(--spacing-xl);
-  
-  &__emoji {
-    font-size: 64px;
-    display: block;
-    margin-bottom: var(--spacing-md);
+  &:active {
+    transform: scale(0.96);
   }
-  
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &__text, &__loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+// ===== 任务展示 =====
+.task-display {
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: var(--spacing-xl);
+
+  &__ribbon {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__body {
+    padding: var(--spacing-lg);
+  }
+
+  &__desc {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+
+    .dark &, html.dark & {
+      color: var(--dark-text-primary);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--dark-text-primary);
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+}
+
+// ===== 空状态 =====
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-xl);
+
+  &__icon-wrap {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: 50%;
+    margin: 0 auto var(--spacing-lg);
+  }
+
   p {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
   }
 }
 
-.info-section {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+// ===== 配置提示 =====
+.info-card {
+  padding: var(--spacing-lg);
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  &__text {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+  }
 }
 
-.info-content {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+// ===== 工具类 =====
+.glass-card {
+  @include glass-card;
 }
 
-.info-icon {
-  font-size: 32px;
+.spinning {
+  animation: spin 1s linear infinite;
 }
 
-.info-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-sm);
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateX(0%) translateY(0) rotate(0deg); }
+  50% { transform: translateX(0%) translateY(-10px) rotate(5deg); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

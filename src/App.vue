@@ -1,6 +1,10 @@
 <template>
   <div class="app-container" :class="{ dark: darkMode }">
-    <router-view />
+    <router-view v-slot="{ Component, route: viewRoute }">
+      <Transition :name="transitionName" mode="out-in">
+        <component :is="Component" :key="viewRoute.path" />
+      </Transition>
+    </router-view>
     <Tabbar v-if="showTabbar" />
     
     <!-- 全局 Toast 组件 -->
@@ -24,15 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores'
 import Tabbar from '@/components/Tabbar.vue'
 import Toast from '@/components/Toast.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useToast } from '@/utils/toast'
-import { useConfirm, confirmResult } from '@/utils/confirm'
-import { useConfirm as useConfirmUtil } from '@/utils/confirm'
+import { useConfirm } from '@/utils/confirm'
 import { App } from '@capacitor/app'
 import { StatusBar, Style as StatusBarStyle } from '@capacitor/status-bar'
 import { hasOpenModal, lockBackgroundScroll, unlockBackgroundScroll } from '@/composables/useModalLock'
@@ -47,21 +50,51 @@ const darkMode = computed(() => store.darkMode)
 const { toastVisible, toastMessage, toastType } = useToast()
 
 // Confirm 相关
-const { confirmVisible, confirmTitle, confirmMessage, confirmType, showConfirm, confirmResult: localConfirmResult } = useConfirmUtil()
+const { confirmVisible, confirmTitle, confirmMessage, confirmType, showConfirm, confirmResult } = useConfirm()
 
 const showTabbar = computed(() => {
-  // 底部导航显示在主要页面
   const mainRoutes = ['/', '/index', '/stats', '/lucky', '/exchange', '/mine']
   return mainRoutes.includes(route.path)
 })
 
 const handleConfirm = () => {
-  localConfirmResult(true)
+  confirmResult(true)
 }
 
 const handleCancel = () => {
-  localConfirmResult(false)
+  confirmResult(false)
 }
+
+// 页面转场动画控制
+const transitionName = ref('slide-left')
+const historyStack = ref<string[]>(['/'])
+
+watch(() => route.path, (newPath, oldPath) => {
+  if (oldPath) {
+    const tabRoutes = ['/index', '/stats', '/lucky', '/exchange', '/mine']
+    const newIsTab = tabRoutes.includes(newPath)
+    const oldIsTab = tabRoutes.includes(oldPath)
+    
+    if (newIsTab && oldIsTab) {
+      // Tab 切换 - 使用淡入淡出
+      transitionName.value = 'fade'
+    } else {
+      // 判断是前进还是后退
+      const historyIndex = historyStack.value.indexOf(newPath)
+      if (historyIndex === -1 || historyIndex < historyStack.value.length - 1) {
+        transitionName.value = 'slide-left'
+      } else {
+        transitionName.value = 'slide-right'
+      }
+    }
+  }
+  // 更新历史栈
+  historyStack.value = historyStack.value.filter(p => p !== newPath)
+  historyStack.value.push(newPath)
+  if (historyStack.value.length > 10) {
+    historyStack.value.shift()
+  }
+})
 
 // Android 返回键监听器
 let backButtonListener: any = null
@@ -71,7 +104,6 @@ watch(confirmVisible, (newVal: boolean) => {
   if (newVal) {
     lockBackgroundScroll()
   } else {
-    // 延迟一点时间，检查是否还有其他弹窗打开
     setTimeout(() => {
       if (!hasOpenModal()) {
         unlockBackgroundScroll()
@@ -81,54 +113,40 @@ watch(confirmVisible, (newVal: boolean) => {
 })
 
 /**
- * 更新状态栏样式（根据深色/浅色模式）
+ * 更新状态栏样式
  */
 const updateStatusBarStyle = async (isDark: boolean) => {
   try {
     const capacitor = (window as any).Capacitor
     if (capacitor && capacitor.isNativePlatform()) {
-      // 更新状态栏背景色
       await StatusBar.setBackgroundColor({ 
-        color: isDark ? '#1F2937' : '#F9FAFB' 
+        color: isDark ? '#0F172A' : '#EEF2FF' 
       })
-      
-      // 更新状态栏图标颜色（深色模式用浅色图标，浅色模式用深色图标）
       await StatusBar.setStyle({ 
         style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
       })
-      
-      console.log('状态栏样式已更新:', isDark ? '深色' : '浅色')
     }
   } catch (error) {
     console.error('更新状态栏样式失败:', error)
   }
 }
 
-// 监听深色模式切换，同步更新状态栏
 watch(darkMode, async (newVal: boolean) => {
   await updateStatusBarStyle(newVal)
 }, { immediate: true })
 
-/**
- * 初始化状态栏样式
- */
 const initStatusBar = async () => {
   try {
     const capacitor = (window as any).Capacitor
     if (capacitor && capacitor.isNativePlatform()) {
-      // 设置状态栏透明，让 WebView 内容延伸到状态栏下方
       await StatusBar.setOverlaysWebView({ overlay: true })
-      
-      // 根据当前深色模式设置状态栏样式
       const isDark = darkMode.value
       await StatusBar.setBackgroundColor({ 
-        color: isDark ? '#1F2937' : '#F9FAFB' 
+        color: isDark ? '#0F172A' : '#EEF2FF' 
       })
       await StatusBar.setStyle({ 
         style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
       })
-      
-      console.log('状态栏初始化成功，当前模式:', isDark ? '深色' : '浅色')
     }
   } catch (error) {
     console.error('初始化状态栏失败:', error)
@@ -136,36 +154,24 @@ const initStatusBar = async () => {
 }
 
 onMounted(async () => {
-  // 初始化默认数据
   store.initDefaultData()
   
-  // 立即应用深色模式到 html 和 body
   if (store.darkMode) {
     document.documentElement.classList.add('dark')
-    document.documentElement.style.backgroundColor = 'var(--dark-bg)'
-    document.body.style.backgroundColor = 'var(--dark-bg)'
   } else {
     document.documentElement.classList.remove('dark')
-    document.documentElement.style.backgroundColor = 'var(--bg-color)'
-    document.body.style.backgroundColor = 'var(--bg-color)'
   }
   
-  // 初始化状态栏样式
   await initStatusBar()
   
-  // 监听 Android 物理返回键
   const capacitor = (window as any).Capacitor
   if (capacitor && capacitor.isNativePlatform()) {
     backButtonListener = App.addListener('backButton', (data: { canGoBack: boolean }) => {
-      // 如果有弹窗，先关闭弹窗
       if (hasOpenModal()) {
-        // 关闭确认对话框
         if (confirmVisible.value) {
           confirmResult(false)
           return
         }
-        
-        // 关闭其他弹窗
         const closeEvents = document.querySelectorAll('.modal-overlay')
         closeEvents.forEach(overlay => {
           (overlay as HTMLElement).click()
@@ -173,16 +179,13 @@ onMounted(async () => {
         return
       }
       
-      // 如果在子页面（非主页面），返回上一级
       const mainRoutes = ['/', '/index', '/stats', '/lucky', '/exchange', '/mine']
       if (!mainRoutes.includes(route.path)) {
         router.back()
       } else {
-        // 在主页面，双击退出
         if (data.canGoBack) {
           router.back()
         } else {
-          // 提示用户再次按返回键退出
           App.exitApp()
         }
       }
@@ -191,7 +194,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  // 清理返回键监听器
   if (backButtonListener) {
     backButtonListener.remove()
   }
@@ -200,12 +202,12 @@ onUnmounted(() => {
 
 <style scoped>
 .app-container {
+  max-width: 480px;
+  margin: 0 auto;
   min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
-  /* 确保内容延伸到状态栏区域 */
+  background: transparent;
   position: relative;
-  
-  /* 深色模式背景色由 main.scss 统一控制 */
+  padding-bottom: 80px;
+  overflow-x: hidden;
 }
 </style>

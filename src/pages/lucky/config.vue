@@ -12,7 +12,7 @@
     </div>
     
     <!-- 任务列表 -->
-    <div v-if="tasks.length === 0" class="empty-state card">
+    <div v-if="tasks.length === 0" class="empty-state glass-card">
       <span class="empty-state__emoji">📝</span>
       <p>还没有配置任何任务</p>
       <p class="empty-hint">点击上方按钮添加你的第一个幸运任务</p>
@@ -22,7 +22,7 @@
       <div 
         v-for="task in tasks" 
         :key="task.id"
-        class="task-item card"
+        class="task-item glass-card"
       >
         <div class="task-item__content">
           <span class="task-item__icon">⭐</span>
@@ -49,7 +49,7 @@
 
     <!-- 添加/编辑任务弹窗 -->
     <div v-if="showAddForm || showEditForm" class="modal-overlay" @click="closeForm">
-      <div class="modal" @click.stop>
+      <div class="modal glass-modal" @click.stop>
         <h3 class="modal-title">{{ isEditing ? '✏️ 编辑任务' : '➕ 添加任务' }}</h3>
         <div class="form-group">
           <label class="form-label">任务描述</label>
@@ -191,11 +191,14 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .lucky-config-page {
   // 添加顶部安全区域，避免内容被固定头部遮挡
-  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
+  animation: fade-in 0.5s ease;
   
   // 内容区域添加左右边距
   > *:not(.header) {
@@ -237,11 +240,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    box-shadow: var(--shadow-md);
-  }
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   
   &__content {
     display: flex;
@@ -273,21 +272,7 @@ onMounted(() => {
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 16px;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
-  
-  &.btn-edit:hover {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: var(--primary-color);
-  }
-  
-  &.btn-delete:hover {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: var(--danger-color);
-  }
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .modal-overlay {
@@ -304,12 +289,20 @@ onMounted(() => {
   padding: var(--spacing-lg);
 }
 
-.modal {
-  background: var(--card-bg);
+.glass-modal {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   max-width: 400px;
   width: 100%;
+
+  .dark &, .app-container.dark &, html.dark & {
+    background: rgba(31, 41, 55, 0.75);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .modal-title {
@@ -350,5 +343,14 @@ onMounted(() => {
 .modal-actions {
   display: flex;
   gap: var(--spacing-sm);
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

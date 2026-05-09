@@ -218,11 +218,14 @@ const saveItem = () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .reward-form-page {
   // 添加顶部安全区域，避免内容被状态栏遮挡
-  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
+  animation: fade-in 0.5s ease;
   background-color: var(--bg-color);
   min-height: 100vh;
   
@@ -284,7 +287,7 @@ const saveItem = () => {
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--card-bg);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   color: var(--text-primary);
   
   &:has(input:checked) {
@@ -316,11 +319,7 @@ const saveItem = () => {
   background: var(--card-bg);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
+  transition: background 0.2s ease, transform 0.2s ease;
   
   &.selected {
     background: var(--primary-color);
@@ -341,7 +340,7 @@ const saveItem = () => {
   border-radius: 14px;
   position: relative;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease;
   
   &.active {
     background: var(--primary-color);
@@ -355,12 +354,21 @@ const saveItem = () => {
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: all 0.3s ease;
+    transition: left 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
   &.active .switch__knob {
     left: 24px;
   }
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -9,7 +9,7 @@
     </div>
     
     <!-- 日期选择 -->
-    <div class="date-selector card">
+    <div class="date-selector glass-card">
       <div class="date-selector__header">
         <button class="btn btn--primary btn--sm" @click="prevDay">◀</button>
         <div class="date-selector__current">
@@ -314,13 +314,16 @@ const goBack = () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .record-page {
   // 添加顶部安全区域，避免内容被状态栏遮挡
-  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
-  background-color: var(--bg-color);
+  background: transparent;
   min-height: 100vh;
+  animation: fade-in 0.5s ease;
   
   > *:not(.header) {
     padding-left: var(--spacing-lg);
@@ -380,7 +383,7 @@ const goBack = () => {
   background: var(--bg-color);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   color: var(--text-primary);
   
   &.active {
@@ -408,6 +411,17 @@ const goBack = () => {
   font-weight: 600;
   margin-bottom: var(--spacing-md);
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+
+  &__dot {
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
 }
 
 .rules-grid {
@@ -425,13 +439,8 @@ const goBack = () => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   position: relative;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
   
   &.selected {
     border: 2px solid var(--primary-color);
@@ -443,9 +452,6 @@ const goBack = () => {
     cursor: not-allowed;
     background: rgba(107, 114, 128, 0.05);
     
-    &:hover {
-      transform: none;
-    }
   }
   
   &__icon {
@@ -566,12 +572,7 @@ const goBack = () => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
+  transition: border-color 0.2s ease;
   
   &.selected {
     border: 2px solid var(--primary-color);
@@ -632,5 +633,14 @@ const goBack = () => {
 .yesterday-badge {
   background: var(--text-muted);
   color: white;
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

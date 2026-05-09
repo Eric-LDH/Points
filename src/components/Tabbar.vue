@@ -7,13 +7,11 @@
       :class="{ 'tabbar__item--active': isActive(item.path) }"
       @click="navigateTo(item.path)"
     >
-      <div 
-        class="tabbar__item__icon"
-        :class="{ 'tabbar__item__icon--highlight': item.highlight }"
-      >
-        {{ item.icon }}
+      <div class="tabbar__item__icon">
+        <IconFont :name="item.icon" :size="22" />
       </div>
       <span>{{ item.title }}</span>
+      <div v-if="isActive(item.path)" class="tabbar__item__indicator" />
     </div>
   </div>
 </template>
@@ -21,17 +19,18 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
+import IconFont from '@/components/IconFont.vue'
 
 const router = useRouter()
 const route = useRoute()
 const store = useAppStore()
 
 const menuItems = [
-  { path: '/index', icon: '🏠', title: '首页', highlight: false },
-  { path: '/stats', icon: '📊', title: '统计', highlight: false },
-  { path: '/lucky', icon: '🍀', title: '幸运', highlight: false },
-  { path: '/exchange', icon: '🎁', title: '兑换', highlight: false },
-  { path: '/mine', icon: '👤', title: '我的', highlight: false }
+  { path: '/index', icon: 'home' as const, title: '首页' },
+  { path: '/stats', icon: 'chart' as const, title: '统计' },
+  { path: '/lucky', icon: 'clover' as const, title: '幸运' },
+  { path: '/exchange', icon: 'gift' as const, title: '兑换' },
+  { path: '/mine', icon: 'user' as const, title: '我的' }
 ]
 
 const isActive = (path: string) => {
@@ -39,7 +38,6 @@ const isActive = (path: string) => {
 }
 
 const navigateTo = (path: string) => {
-  // 切换页面时刷新数据
   store.refreshData()
   router.push(path)
 }
@@ -49,57 +47,73 @@ const navigateTo = (path: string) => {
 .tabbar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border-color);
-  padding: 8px 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
   z-index: 1000;
-  max-width: 480px;
-  margin: 0 auto;
   
   &__item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 11px;
     color: var(--text-secondary);
-    
-    &:hover {
-      transform: translateY(-2px);
-    }
+    padding: 4px 16px;
+    border-radius: var(--radius-md);
+    position: relative;
     
     &:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
     
     &--active {
       color: var(--primary-color);
+      
+      .tabbar__item__icon {
+        transform: scale(1.15) translateY(-2px);
+        filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
+      }
     }
     
     &__icon {
-      font-size: 24px;
-      
-      &--highlight {
-        font-size: 36px;
-        filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
-        animation: pulse 2s infinite;
-      }
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: inherit;
+    }
+    
+    &__indicator {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+      border-radius: 2px;
+      animation: indicator-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
+@keyframes indicator-in {
+  from {
+    transform: translateX(-50%) scaleX(0);
+    opacity: 0;
   }
-  50% {
-    transform: scale(1.1);
+  to {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
   }
 }
 </style>

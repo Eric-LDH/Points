@@ -48,7 +48,7 @@
 
     <!-- 商品列表 -->
     <div class="section">
-      <h2 class="section-title">🎁 兑换商品 ({{ filteredItems.length }}项)</h2>
+      <h2 class="section-title"><span class="section-title__dot" />🎁 兑换商品 ({{ filteredItems.length }}项)</h2>
       
       <div v-if="filteredItems.length === 0" class="empty-state">
         <span class="empty-state__emoji">🛍️</span>
@@ -62,7 +62,7 @@
         <div 
           v-for="item in filteredItems" 
           :key="item.id"
-          class="item-card"
+          class="item-card glass-card"
         >
           <div class="item-card__header">
             <div class="item-card__left">
@@ -181,11 +181,14 @@ const getExchangeCount = (itemId: string) => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/main.scss';
+
 .reward-list-page {
   // 头部固定高度 + 状态栏安全区域
-  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
+  animation: fade-in 0.5s ease;
   
   > *:not(.header) {
     padding-left: var(--spacing-lg);
@@ -223,7 +226,7 @@ const getExchangeCount = (itemId: string) => {
   border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   
   &.active {
     background: var(--primary-color);
@@ -237,6 +240,17 @@ const getExchangeCount = (itemId: string) => {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+
+    &__dot {
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
   }
 }
 
@@ -268,11 +282,7 @@ const getExchangeCount = (itemId: string) => {
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    box-shadow: var(--shadow-lg);
-  }
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   
   &__header {
     display: flex;
@@ -364,19 +374,21 @@ const getExchangeCount = (itemId: string) => {
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 18px;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: var(--bg-color);
-  }
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   
   &.active {
     background: rgba(16, 185, 129, 0.1);
     color: var(--success-color);
   }
   
-  &.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
-  }
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

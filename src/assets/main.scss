@@ -1,9 +1,50 @@
+// ========================================
+// 🎨 Glassmorphism 设计系统
+// ========================================
+
+// 玻璃效果 Mixin
+@mixin glass($opacity: 0.7, $blur: 8px, $border-opacity: 0.12) {
+  background: rgba(255, 255, 255, $opacity);
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, $border-opacity);
+  
+  // 不支持 backdrop-filter 的降级方案
+  @supports not (backdrop-filter: blur(1px)) {
+    background: rgba(255, 255, 255, $opacity + 0.25);
+  }
+  
+  // 深色模式（保持原有更大模糊效果）
+  .dark &, .app-container.dark &, html.dark & {
+    background: rgba(31, 41, 55, $opacity + 0.15);
+    border-color: rgba(255, 255, 255, $border-opacity * 0.5);
+    backdrop-filter: blur(calc($blur * 1.5));
+    -webkit-backdrop-filter: blur(calc($blur * 1.5));
+  }
+}
+
+// 卡片（实心背景，无 backdrop-filter — 移动端性能关键）
+@mixin glass-card($opacity: 0.7, $blur: 8px) {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+  
+  .dark &, .app-container.dark &, html.dark & {
+    background: var(--dark-card-bg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.05);
+  }
+}
+
 // 变量定义
 :root {
   // 主色调
   --primary-color: #6366F1;
   --primary-light: #818CF8;
   --primary-dark: #4F46E5;
+  
+  // 扩展紫色调
+  --purple-light: #A78BFA;
+  --purple-dark: #8B5CF6;
   
   // 辅助色
   --success-color: #10B981;
@@ -12,7 +53,7 @@
   --info-color: #3B82F6;
   
   // 中性色 - 浅色模式
-  --bg-color: #F9FAFB;
+  --bg-color: #EEF2FF;
   --card-bg: #FFFFFF;
   --text-primary: #111827;
   --text-secondary: #6B7280;
@@ -22,18 +63,30 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   
   // 深色模式
-  --dark-bg: #1F2937;
-  --dark-card-bg: #374151;
-  --dark-text-primary: #F9FAFB;
-  --dark-text-secondary: #D1D5DB;
-  --dark-border: #4B5563;
-  --dark-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --dark-bg: #0F172A;
+  --dark-card-bg: #1E293B;
+  --dark-text-primary: #F1F5F9;
+  --dark-text-secondary: #CBD5E1;
+  --dark-text-muted: #64748B;
+  --dark-border: #334155;
+  --dark-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --dark-shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  
+  // 玻璃效果变量
+  --glass-bg-light: rgba(255, 255, 255, 0.55);
+  --glass-bg-dark: rgba(30, 41, 59, 0.65);
+  --glass-blur: 16px;
+  --glass-border-light: rgba(255, 255, 255, 0.12);
+  --glass-border-dark: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+  --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
   
   // 圆角
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-2xl: 32px;
   
   // 间距
   --spacing-xs: 4px;
@@ -42,7 +95,12 @@
   --spacing-lg: 16px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
+  
+  // 渐变定义 - 浅色模式
+  --bg-gradient: radial-gradient(ellipse at 50% 0%, #EEF2FF 0%, #F5F3FF 40%, #FAFAFA 100%);
+  --bg-gradient-dark: radial-gradient(ellipse at 50% 0%, #0F172A 0%, #1E1B4B 50%, #0F172A 100%);
 }
+
 
 // 全局重置
 * {
@@ -54,10 +112,10 @@
 }
 
 html, body {
-  font-family: 'SF Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: var(--bg-color);
+  font-family: 'SF Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+  background: var(--bg-gradient);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -68,7 +126,7 @@ html, body {
   
   // 深色模式适配
   @media (prefers-color-scheme: dark) {
-    background-color: var(--dark-bg) !important;
+    background: var(--bg-gradient-dark) !important;
     color: var(--dark-text-primary);
   }
 }
@@ -77,13 +135,13 @@ html, body {
 #app {
   min-height: 100vh;
   width: 100%;
-  background-color: var(--bg-color);
+  background: transparent;
   // 添加顶部安全区域，避免内容被状态栏遮挡
   padding-top: env(safe-area-inset-top, 44px);
   
   // 深色模式
   @media (prefers-color-scheme: dark) {
-    background-color: var(--dark-bg) !important;
+    background: transparent !important;
   }
 }
 
@@ -105,23 +163,25 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: calc(var(--spacing-md) + env(safe-area-inset-top, 0px)) var(--spacing-lg) var(--spacing-md);
-  background-color: var(--bg-color) !important;
+  @include glass(0.85, 10px, 0.08);
   z-index: 1000;
-  backdrop-filter: blur(10px);
+  
+  // 底部线条装饰
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: var(--spacing-lg);
+    right: var(--spacing-lg);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0.3;
+  }
   
   .page-title {
     font-size: 20px;
     font-weight: 700;
     color: var(--text-primary) !important;
-  }
-  
-  // 深色模式适配
-  @media (prefers-color-scheme: dark) {
-    background-color: var(--dark-bg) !important;
-    
-    .page-title {
-      color: var(--dark-text-primary) !important;
-    }
   }
 }
 
@@ -158,10 +218,10 @@ html, body {
   .app-container.dark,
   .app-container.dark body,
   .app-container.dark #app {
-    background-color: var(--dark-bg) !important;
+    background: var(--bg-gradient-dark) !important;
   }
   
-  // 确保所有页面容器都使用深色背景
+  // 确保所有页面容器透明显渐变背景
   .index-page,
   .stats-page,
   .record-page,
@@ -171,23 +231,23 @@ html, body {
   .reward-form-page,
   .rule-list-page,
   .rule-edit-page {
-    background-color: var(--dark-bg) !important;
+    background: transparent !important;
   }
   
-  // 华为设备特殊处理：强制根元素和所有祖先元素使用深色背景
+  // 华为设备特殊处理：强制根元素和所有祖先元素使用深色渐变
   :root {
-    background-color: var(--dark-bg) !important;
+    background: var(--bg-gradient-dark) !important;
   }
   
   html, body {
-    background-color: var(--dark-bg) !important;
+    background: var(--bg-gradient-dark) !important;
   }
   
   // 状态栏安全区域
   @supports (padding-top: env(safe-area-inset-top)) {
     body {
       padding-top: env(safe-area-inset-top);
-      background-color: var(--dark-bg) !important;
+      background: var(--bg-gradient-dark) !important;
     }
   }
 }
@@ -195,20 +255,16 @@ html, body {
 // 深色模式 - 支持两种模式：html.dark 和 .app-container.dark
 html.dark,
 .app-container.dark {
-  background-color: var(--dark-bg) !important;
+  background: var(--bg-gradient-dark) !important;
   color: var(--dark-text-primary);
   
   // 强制 html 和 body 也使用深色背景
-  &, & body {
-    background-color: var(--dark-bg) !important;
-  }
-  
-  .app-container {
-    background-color: var(--dark-bg) !important;
+  &, & body, & #app, & .app-container {
+    background: var(--bg-gradient-dark) !important;
   }
   
   .card {
-    background-color: var(--dark-card-bg);
+    @include glass(0.45, 16px, 0.06);
     box-shadow: var(--dark-shadow);
   }
   
@@ -224,13 +280,8 @@ html.dark,
   
   // 菜单项
   .menu-item {
-    background: var(--dark-card-bg);
     border-bottom-color: var(--dark-border);
     color: var(--dark-text-primary);
-    
-    &:hover {
-      background: var(--dark-border);
-    }
     
     &__title {
       color: var(--dark-text-primary);
@@ -298,11 +349,6 @@ html.dark,
     background: var(--dark-border);
     color: var(--dark-text-primary);
     
-    &:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-    
     &.active {
       background: rgba(99, 102, 241, 0.2);
     }
@@ -321,10 +367,6 @@ html.dark,
     background: var(--dark-card-bg);
     color: var(--dark-text-primary);
     border-color: var(--dark-border);
-    
-    &:hover {
-      background: var(--dark-border);
-    }
     
     &__name {
       color: var(--dark-text-primary);
@@ -395,24 +437,9 @@ html.dark,
   .rule-option {
     background: var(--dark-card-bg);
     
-    &:hover {
-      background: var(--primary-color);
-      
-      .rule-option__name {
-        color: white;
-      }
-      
-      .rule-option__points {
-        color: white;
-      }
-    }
-    
     &.completed {
       background: rgba(16, 185, 129, 0.05);
       
-      &:hover {
-        background: rgba(16, 185, 129, 0.1);
-      }
     }
     
     &__name {
@@ -428,10 +455,6 @@ html.dark,
   .record-item {
     background: var(--dark-card-bg);
     border-bottom-color: var(--dark-border);
-    
-    &:hover {
-      background: var(--dark-border);
-    }
     
     &__name {
       color: var(--dark-text-primary);
@@ -475,10 +498,6 @@ html.dark,
     background: var(--dark-card-bg);
     border-color: var(--dark-border);
     
-    &:hover {
-      background: var(--dark-border);
-    }
-    
     &__name {
       color: var(--dark-text-primary);
     }
@@ -518,9 +537,6 @@ html.dark,
   .btn-back {
     color: var(--dark-text-secondary);
     
-    &:hover {
-      color: var(--primary-color);
-    }
   }
   
   // ✅ 首页头部统计
@@ -570,19 +586,12 @@ html.dark,
       color: var(--dark-text-secondary);
     }
     
-    &:hover {
-      background: var(--dark-border);
-    }
   }
   
   // ✅ 规则项/记录项（通用）
   .rule-item,
   .record-item {
     background: var(--dark-card-bg);
-    
-    &:hover {
-      background: var(--dark-border);
-    }
     
     &__name {
       color: var(--dark-text-primary);
@@ -609,10 +618,6 @@ html.dark,
     background: var(--dark-card-bg);
     border-color: var(--dark-border);
     
-    &:hover {
-      background: var(--dark-border);
-    }
-    
     &__name {
       color: var(--dark-text-primary);
     }
@@ -631,10 +636,6 @@ html.dark,
   .item-row {
     background: var(--dark-card-bg);
     border-bottom-color: var(--dark-border);
-    
-    &:hover {
-      background: var(--dark-border);
-    }
     
     &__name {
       color: var(--dark-text-primary);
@@ -700,15 +701,7 @@ html.dark,
   
   // ✅ 积分规则管理页面
   .rule-list-page {
-    background-color: var(--dark-bg);
-    
-    .header {
-      background-color: var(--dark-bg) !important;
-      
-      .page-title {
-        color: var(--dark-text-primary) !important;
-      }
-    }
+    background: transparent;
     
     .search-box {
       .input {
@@ -728,10 +721,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &.active {
           background: var(--primary-color);
           color: white;
@@ -744,10 +733,6 @@ html.dark,
       .rule-card {
         background: var(--dark-card-bg);
         border-color: var(--dark-border);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -767,16 +752,9 @@ html.dark,
           color: var(--dark-text-secondary);
           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
           
-          &:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-          }
-          
           &.active {
             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
             
-            &:hover {
-              box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            }
           }
         }
       }
@@ -789,7 +767,7 @@ html.dark,
   
   // ✅ 兑换商品管理页面
   .reward-list-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
       background-color: var(--dark-bg) !important;
@@ -817,10 +795,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &.active {
           background: var(--primary-color);
           color: white;
@@ -832,10 +806,6 @@ html.dark,
       .item-row {
         background: var(--dark-card-bg);
         border-bottom-color: var(--dark-border);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -905,10 +875,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &__name {
           color: var(--dark-text-primary);
         }
@@ -923,10 +889,6 @@ html.dark,
       .record-item {
         background: var(--dark-card-bg);
         border-bottom-color: var(--dark-border);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -945,7 +907,7 @@ html.dark,
   
   // ✅ 统计页面 - 积分概览和本周表现
   .stats-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .page-title {
       color: var(--dark-text-primary);
@@ -967,8 +929,6 @@ html.dark,
       
       &__stats {
         .stat-box {
-          background: var(--dark-border);
-          
           &__label {
             color: var(--dark-text-secondary);
           }
@@ -1009,10 +969,6 @@ html.dark,
         background: var(--dark-card-bg);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &__header {
           &__icon {
             filter: none;
@@ -1044,10 +1000,6 @@ html.dark,
       .record-item {
         background: var(--dark-card-bg);
         border-bottom-color: var(--dark-border);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -1081,14 +1033,6 @@ html.dark,
       .rule-option {
         background: var(--dark-bg);
         color: var(--dark-text-primary);
-        
-        &:hover {
-          background: var(--dark-border);
-          
-          .rule-option__points {
-            color: white;
-          }
-        }
         
         &.completed {
           opacity: 0.6;
@@ -1126,7 +1070,7 @@ html.dark,
   
   // ✅ 积分规则管理页面（完整深色模式）
   .rule-list-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
       .page-title {
@@ -1152,10 +1096,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &.active {
           background: var(--primary-color);
           color: white;
@@ -1175,10 +1115,6 @@ html.dark,
       .rule-card {
         background: var(--dark-card-bg);
         box-shadow: var(--dark-shadow);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -1207,29 +1143,20 @@ html.dark,
       background: var(--dark-border);
       color: var(--dark-text-primary);
       
-      &:hover {
-        background: var(--primary-color);
-        color: white;
-      }
-      
       &.active {
         background: var(--success-color);
         color: white;
       }
       
-      &.danger:hover {
-        background: var(--danger-color);
-        color: white;
-      }
     }
   }
   
   // ✅ 积分规则编辑页面（完整深色模式）
   .rule-edit-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
-      background-color: var(--dark-bg) !important;
+      background: transparent !important;
       
       .page-title {
         color: var(--dark-text-primary) !important;
@@ -1344,10 +1271,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &.active {
           background: var(--primary-color);
           color: white;
@@ -1367,10 +1290,6 @@ html.dark,
       .item-row {
         background: var(--dark-card-bg);
         border-bottom-color: var(--dark-border);
-        
-        &:hover {
-          background: var(--dark-border);
-        }
         
         &__name {
           color: var(--dark-text-primary);
@@ -1393,10 +1312,10 @@ html.dark,
   
   // ✅ 兑换商品编辑页面（完整深色模式）
   .reward-form-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
-      background-color: var(--dark-bg) !important;
+      background: transparent !important;
       
       .page-title {
         color: var(--dark-text-primary) !important;
@@ -1475,10 +1394,10 @@ html.dark,
   
   // ✅ 手工补录页面（完整深色模式）
   .record-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
-      background-color: var(--dark-bg);
+      background: transparent;
       
       .page-title {
         color: var(--dark-text-primary);
@@ -1524,10 +1443,6 @@ html.dark,
         color: var(--dark-text-primary);
         border-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &__name {
           color: var(--dark-text-primary);
         }
@@ -1547,10 +1462,6 @@ html.dark,
         background: var(--dark-card-bg);
         border-bottom-color: var(--dark-border);
         
-        &:hover {
-          background: var(--dark-border);
-        }
-        
         &__name {
           color: var(--dark-text-primary);
         }
@@ -1564,15 +1475,11 @@ html.dark,
   
   // ✅ 底部导航栏深色模式
   .tabbar {
-    background: var(--dark-card-bg);
-    border-top-color: var(--dark-border);
+    @include glass(0.6, 24px, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     
     &__item {
       color: var(--dark-text-secondary);
-      
-      &:hover {
-        color: var(--dark-text-primary);
-      }
       
       &--active {
         color: var(--primary-color);
@@ -1614,7 +1521,7 @@ html.dark,
   
   // ✅ 幸运任务主页 - 深色模式适配
   .lucky-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .page-title {
       color: var(--dark-text-primary);
@@ -1664,10 +1571,10 @@ html.dark,
   
   // ✅ 幸运任务配置页 - 深色模式适配
   .lucky-config-page {
-    background-color: var(--dark-bg);
+    background: transparent;
     
     .header {
-      background-color: var(--dark-bg) !important;
+      background: transparent !important;
       
       .page-title {
         color: var(--dark-text-primary) !important;
@@ -1687,10 +1594,6 @@ html.dark,
       .task-item {
         background: var(--dark-card-bg);
         
-        &:hover {
-          box-shadow: var(--dark-shadow);
-        }
-        
         &__text {
           color: var(--dark-text-primary);
         }
@@ -1700,19 +1603,7 @@ html.dark,
             border-color: var(--dark-border);
             color: var(--dark-text-primary);
             
-            &:hover {
-              background: var(--dark-border);
-            }
-            
-            &.btn-edit:hover {
-              background: rgba(99, 102, 241, 0.2);
-              border-color: var(--primary-light);
-            }
-            
-            &.btn-delete:hover {
-              background: rgba(239, 68, 68, 0.2);
-              border-color: #F87171;
-            }
+
           }
         }
       }
@@ -1750,47 +1641,68 @@ html.dark,
   }
 }
 
-// 底部导航
+// 底部导航 - 玻璃风格
 .tabbar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border-color);
-  padding: 8px 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  @include glass(0.7, 24px, 0.1);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
   z-index: 1000;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0.2;
+  }
   
   &__item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 11px;
     color: var(--text-secondary);
-    
-    &:hover {
-      transform: translateY(-2px);
-    }
+    padding: 4px 12px;
+    border-radius: var(--radius-md);
+    position: relative;
     
     &:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
     
     &--active {
       color: var(--primary-color);
+      
+      .tabbar__item__icon {
+        transform: scale(1.15) translateY(-2px);
+        filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
+      }
     }
     
     &__icon {
-      font-size: 24px;
+      font-size: 22px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
       
       &--highlight {
-        font-size: 32px;
-        filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3));
+        filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
       }
     }
   }
@@ -1801,14 +1713,10 @@ html.dark,
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: var(--bg-color) !important;
+  background: transparent;
   position: relative;
-  padding-bottom: 70px; // 为底部导航留空间
-  
-  // 深色模式
-  @media (prefers-color-scheme: dark) {
-    background-color: var(--dark-bg) !important;
-  }
+  padding-bottom: 80px; // 为底部导航留空间
+  overflow-x: hidden;
 }
 
 // ✅ APP 专用：禁用滚动回弹/拖拽缓冲效果（仅在 Capacitor 环境中）
@@ -1816,20 +1724,18 @@ body.capacitor .app-container {
   overscroll-behavior-y: none;
 }
 
-// 卡片样式
+// 卡片样式 - 玻璃版本
 .card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
+  @include glass-card;
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow);
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
-  &:hover {
-    box-shadow: var(--shadow-lg);
+  &:active {
+    transform: scale(0.98);
   }
 }
 
-// 按钮样式
+// 按钮样式 - 玻璃版本
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1840,35 +1746,59 @@ body.capacitor .app-container {
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+  
+  // 点击涟漪效果
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
   
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
+    
+    &::after {
+      opacity: 1;
+    }
   }
   
   &--primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
     
-    &:hover {
-      background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
     }
   }
   
   &--success {
-    background: var(--success-color);
+    background: linear-gradient(135deg, var(--success-color), #059669);
     color: white;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    
   }
   
   &--warning {
-    background: var(--warning-color);
+    background: linear-gradient(135deg, var(--warning-color), #D97706);
     color: white;
   }
   
   &--danger {
-    background: var(--danger-color);
+    background: linear-gradient(135deg, var(--danger-color), #DC2626);
     color: white;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    
   }
   
   &--outline {
@@ -1876,38 +1806,113 @@ body.capacitor .app-container {
     border: 2px solid var(--primary-color);
     color: var(--primary-color);
     font-weight: 600;
+    
+    .dark &, html.dark &, .app-container.dark & {
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+      
+    }
+  }
+  
+  // 小按钮
+  &--sm {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: var(--radius-lg);
   }
 }
 
-// 输入框样式
+// 输入框样式 - 玻璃版本
 .input {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  border: 1.5px solid rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-lg);
   font-size: 16px;
-  transition: all 0.2s ease;
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-primary);
   
   &:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    background: rgba(255, 255, 255, 0.7);
+  }
+  
+  &::placeholder {
+    color: var(--text-muted);
+  }
+  
+  .dark &, html.dark &, .app-container.dark & {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--dark-text-primary);
+    
+    &:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      background: rgba(30, 41, 59, 0.8);
+    }
+    
+    &::placeholder {
+      color: var(--dark-text-muted);
+    }
   }
 }
 
-// 标签页
+// 标签页 - 玻璃版本
 .tab {
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  @include glass(0.4, 8px, 0.08);
   
   &--active {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
   }
 }
 
-// 动画效果
+// ========================================
+// 🎬 页面转场动画
+// ========================================
+
+// 滑动转场（左右）
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.slide-left-enter-from {
+  transform: translateX(30%);
+  opacity: 0;
+}
+
+.slide-left-leave-to {
+  transform: translateX(-20%);
+  opacity: 0;
+}
+
+.slide-right-enter-from {
+  transform: translateX(-30%);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(20%);
+  opacity: 0;
+}
+
+// 淡入转场
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -1918,17 +1923,120 @@ body.capacitor .app-container {
   opacity: 0;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+// 缩放 + 淡入转场
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
 }
 
-.slide-enter-from {
-  transform: translateX(100%);
+.scale-fade-enter-from {
+  transform: scale(0.95);
+  opacity: 0;
 }
 
-.slide-leave-to {
-  transform: translateX(-100%);
+.scale-fade-leave-to {
+  transform: scale(1.05);
+  opacity: 0;
+}
+
+// ========================================
+// 🎯 关键帧动画
+// ========================================
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 16px rgba(99, 102, 241, 0.5));
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.08); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// 渐变背景动画
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+// 实用动画类
+.animate-fade-in {
+  animation: fade-in 0.4s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+// 减少动画偏好
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 // 工具类
