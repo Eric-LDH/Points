@@ -181,7 +181,7 @@ const getExchangeCount = (itemId: string) => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .reward-list-page {
   // 头部固定高度 + 状态栏安全区域

@@ -262,7 +262,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .index-page {
   padding: var(--spacing-lg);
@@ -458,9 +458,10 @@ onMounted(() => {
   gap: 6px;
   padding: var(--spacing-md) var(--spacing-lg);
   min-width: 76px;
-  @include glass-card(0.5, 12px);
+  @include glass(0.5, 12px);
+  border: none;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
   flex-shrink: 0;
   border-radius: var(--radius-xl);
 
@@ -641,9 +642,10 @@ onMounted(() => {
 .modal {
   width: 100%;
   max-width: 480px;
-  max-height: 75vh;
+  max-height: 85vh;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: slide-up-modal 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &__header {
@@ -676,11 +678,14 @@ onMounted(() => {
 
   &__body {
     padding: var(--spacing-md) var(--spacing-lg);
-    max-height: calc(75vh - 60px);
+    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
+    max-height: calc(85vh - 60px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    flex: 1;
   }
 }
 

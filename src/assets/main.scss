@@ -580,7 +580,7 @@ html.dark,
   
   // ✅ 快捷操作按钮
   .quick-action-btn {
-    background: var(--dark-card-bg);
+    background: rgba(31, 41, 55, 0.6);
     
     span {
       color: var(--dark-text-secondary);

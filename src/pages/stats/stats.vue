@@ -246,7 +246,7 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .stats-page {
   padding: var(--spacing-lg);

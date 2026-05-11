@@ -364,7 +364,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .mine-page {
   padding: var(--spacing-lg);

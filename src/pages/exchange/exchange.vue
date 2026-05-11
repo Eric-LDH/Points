@@ -239,7 +239,7 @@ const cancelExchange = async (record: ExchangeRecord) => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .exchange-page {
   padding: var(--spacing-lg);

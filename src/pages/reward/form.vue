@@ -218,7 +218,7 @@ const saveItem = () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .reward-form-page {
   // 添加顶部安全区域，避免内容被状态栏遮挡

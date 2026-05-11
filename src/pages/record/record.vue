@@ -314,7 +314,7 @@ const goBack = () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/main.scss';
+@use '@/assets/main.scss' as *;
 
 .record-page {
   // 添加顶部安全区域，避免内容被状态栏遮挡
