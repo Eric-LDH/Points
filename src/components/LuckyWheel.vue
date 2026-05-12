@@ -36,17 +36,7 @@
               stroke-width="4"
               class="glow-path"
             />
-            <text
-              :x="seg.textX"
-              :y="seg.textY"
-              :transform="`rotate(${seg.textAngle}, ${seg.textX}, ${seg.textY})`"
-              text-anchor="middle"
-              dominant-baseline="middle"
-              fill="#fff"
-              :font-size="seg.fontSize"
-              font-weight="700"
-              style="text-shadow: 0 1px 4px rgba(0,0,0,0.5); pointer-events: none; letter-spacing: 0.5px;"
-            >{{ seg.label }}</text>
+
           </g>
           <!-- 中心装饰 -->
           <circle cx="150" cy="150" r="44" fill="rgba(99,102,241,0.15)" />
@@ -95,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import type { LuckyTask } from '@/types'
 
 const props = withDefaults(defineProps<{
@@ -126,6 +116,8 @@ const COLORS = [
   '#EAB308', // 黄
   '#3B82F6', // 蓝
 ]
+
+const SPIN_DURATION = 3500 // 旋转持续时间（毫秒）
 
 const spinning = ref(false)
 const currentRotation = ref(0)
@@ -158,33 +150,9 @@ const segments = computed(() => {
     const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
 
     // 文字位置（扇区中心线 65% 半径处）
-    const midAngleDeg = startAngle + sectorAngle / 2
-    const midRad = (midAngleDeg * Math.PI) / 180
-    const textR = r * 0.62
-    const textX = cx + textR * Math.cos(midRad)
-    const textY = cy + textR * Math.sin(midRad)
-
-    // 文字旋转（从中心向外阅读）
-    let textAngle = midAngleDeg + 90
-    const normalizedAngle = ((textAngle % 360) + 360) % 360
-    if (normalizedAngle > 90 && normalizedAngle < 270) {
-      textAngle += 180
-    }
-
-    // 文字截断
-    const maxLen = count > 8 ? 5 : count > 6 ? 6 : 8
-    const label = task.description.length > maxLen
-      ? task.description.slice(0, maxLen) + '…'
-      : task.description
-
     return {
       path,
       color: COLORS[i % COLORS.length],
-      label,
-      textX,
-      textY,
-      textAngle,
-      fontSize: count > 8 ? 10 : count > 6 ? 11 : 12,
     }
   })
 })
@@ -193,7 +161,7 @@ const segments = computed(() => {
 const wheelStyle = computed(() => ({
   transform: `rotate(${currentRotation.value}deg)`,
   transition: spinning.value
-    ? 'transform 3s cubic-bezier(0.15, 0.85, 0.35, 1.05)'
+    ? `transform ${SPIN_DURATION}ms cubic-bezier(0.15, 0.85, 0.35, 1.05)`
     : 'none',
 }))
 
@@ -205,6 +173,8 @@ watch(() => props.selectedIndex, (val) => {
 }, { immediate: true })
 
 // 开始旋转
+let spinTimer: ReturnType<typeof setTimeout> | null = null
+
 const startSpin = () => {
   if (spinning.value || props.disabled || props.tasks.length === 0) return
 
@@ -216,40 +186,46 @@ const startSpin = () => {
   const targetRotation = (360 - targetEffectiveAngle % 360 + 360) % 360
   const newRotation = currentRotation.value + baseTurns * 360 + targetRotation
 
-  // 激活过渡样式
+  // 激活旋转状态（按钮立即禁用）
   spinning.value = true
   resultIndex.value = null
 
-  // 等待 Vue 更新 DOM，然后强制浏览器重排使 transition 生效，最后修改旋转值触发动画
-  nextTick(() => {
-    // 强制浏览器重新计算样式（让 transition 属性被识别）
-    void wheelRef.value?.offsetHeight
+  // 清除上次计时（安全防护）
+  if (spinTimer) {
+    clearTimeout(spinTimer)
+    spinTimer = null
+  }
 
-    currentRotation.value = newRotation
-
-    const onTransitionEnd = (e: TransitionEvent) => {
-      if (e.propertyName !== 'transform') return
-      spinning.value = false
-      resultIndex.value = targetIndex
-      currentRotation.value = newRotation % 360
-
-      const selectedTask = props.tasks[targetIndex]
-      if (selectedTask) {
-        emit('draw', selectedTask)
-      }
-
-      const el = wheelRef.value
-      if (el) {
-        el.removeEventListener('transitionend', onTransitionEnd)
-      }
-    }
-
-    const el = wheelRef.value
-    if (el) {
-      el.addEventListener('transitionend', onTransitionEnd)
-    }
+  // 双段 requestAnimationFrame 确保 transition 被浏览器正确识别：
+  // 第一帧：spinning=true 使 transition 样式生效
+  // 第二帧：改变 transform 触发平滑动画
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      currentRotation.value = newRotation
+    })
   })
+
+  // 固定时长后结束旋转（不依赖 transitionend 事件，更可靠）
+  spinTimer = setTimeout(() => {
+    spinning.value = false
+    resultIndex.value = targetIndex
+    currentRotation.value = newRotation % 360
+
+    const selectedTask = props.tasks[targetIndex]
+    if (selectedTask) {
+      emit('draw', selectedTask)
+    }
+    spinTimer = null
+  }, SPIN_DURATION)
 }
+
+// 组件卸载时清理计时器
+onUnmounted(() => {
+  if (spinTimer) {
+    clearTimeout(spinTimer)
+    spinTimer = null
+  }
+})
 
 // 暴露方法供父组件调用
 defineExpose({ resultIndex })

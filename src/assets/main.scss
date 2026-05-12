@@ -1522,49 +1522,28 @@ html.dark,
   // ✅ 幸运任务主页 - 深色模式适配
   .lucky-page {
     background: transparent;
-    
-    .page-title {
-      color: var(--dark-text-primary);
-    }
-    
-    .trigger-section {
-      background: var(--dark-card-bg);
-    }
-    
-    .task-display {
-      background: var(--dark-card-bg);
-      
-      .task-header {
-        .task-title {
-          color: var(--dark-text-primary);
-        }
+
+    .hero-header {
+      &__title {
+        color: #fff;
       }
-      
-      .task-content {
-        background: var(--dark-border);
-        
-        .task-description {
-          color: var(--dark-text-primary);
-        }
-        
-        .task-time {
-          color: var(--dark-text-secondary);
-        }
+
+      &__subtitle {
+        color: rgba(255, 255, 255, 0.8);
       }
     }
-    
+
     .empty-state {
-      background: var(--dark-card-bg);
       color: var(--dark-text-secondary);
+
+      &__icon-wrap {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.08));
+      }
     }
-    
-    .info-section {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-      
-      .info-content {
-        .info-text {
-          color: var(--dark-text-secondary);
-        }
+
+    .info-card {
+      .info-card__text {
+        color: var(--dark-text-muted);
       }
     }
   }
