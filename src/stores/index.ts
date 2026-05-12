@@ -54,7 +54,8 @@ export const useAppStore = defineStore('app', () => {
   })
 
   const todayRecords = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    // 使用本地时间格式化，避免时区问题
+    const today = formatDateOnly(new Date())
     return pointsRecords.value.filter(r => r.date === today && r.childId === currentChildId.value)
   })
 
@@ -300,7 +301,8 @@ export const useAppStore = defineStore('app', () => {
       
       // 转换为 JSON 字符串
       const jsonString = JSON.stringify(backupData, null, 2)
-      const fileName = `积分备份_${new Date().toISOString().split('T')[0]}.json`
+      // 使用本地时间格式化，避免时区问题
+      const fileName = `积分备份_${formatDateOnly(new Date())}.json`
       
       // 创建 Blob 并转换为 Base64
       const blob = new Blob([jsonString], { type: 'application/json' })
@@ -380,6 +382,14 @@ export const useAppStore = defineStore('app', () => {
     }
     // 保存到 localStorage
     localStorage.setItem('darkMode', JSON.stringify(darkMode.value))
+  }
+
+  // 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
+  function formatDateOnly(date: Date): string {
+    const year = date.getFullYear()
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   return {

@@ -320,7 +320,8 @@ const exportBackup = async () => {
   try {
     const backupData = { rules: store.rules, rewardItems: store.rewardItems, pointsRecords: store.pointsRecords, exchangeRecords: store.exchangeRecords, children: store.children, luckyTasks: store.luckyTasks, backupAt: new Date().toISOString(), version: '1.0.0' }
     const jsonString = JSON.stringify(backupData, null, 2)
-    const dateStr = new Date().toISOString().split('T')[0]
+    // 使用本地时间格式化，避免时区问题
+    const dateStr = formatDateOnly(new Date())
     const fileName = `backup_${dateStr}.json`
     const capacitor = (window as any).Capacitor
     if (capacitor && capacitor.isNativePlatform()) {
@@ -342,6 +343,14 @@ const exportBackup = async () => {
     console.error('备份失败:', error)
     showToast({ message: '备份失败：' + (error as Error).message, type: 'error' })
   }
+}
+
+// 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
+const formatDateOnly = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 const triggerImport = () => { fileInput.value?.click() }

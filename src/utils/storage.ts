@@ -266,7 +266,9 @@ export const Storage = {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `积分备份_${new Date().toISOString().split('T')[0]}.json`
+    // 使用本地时间格式化，避免时区问题
+    const dateStr = formatDateOnly(new Date())
+    a.download = `积分备份_${dateStr}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -288,4 +290,12 @@ export const Storage = {
       reader.readAsText(file)
     })
   }
+}
+
+// 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
+function formatDateOnly(date: Date): string {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
 }

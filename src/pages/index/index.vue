@@ -159,11 +159,13 @@ const streakDays = computed(() => {
   const dates = [...new Set(childRecords.map(r => r.date))]
   dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
   if (dates.length === 0) return 0
-  const today = new Date().toISOString().split('T')[0]
+  // 使用本地时间格式化，避免时区问题
+  const today = formatDateOnly(new Date())
   let startIndex = 0
   if (dates[0] !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-    if (dates[0] !== yesterday) return 0
+    const yesterday = new Date(Date.now() - 86400000)
+    const yesterdayStr = formatDateOnly(yesterday)
+    if (dates[0] !== yesterdayStr) return 0
     startIndex = 0
   }
   let streak = 1
@@ -213,7 +215,7 @@ const selectRule = (rule: Rule) => {
     ruleName: rule.name,
     ruleIcon: rule.icon,
     points: rule.points,
-    date: now.toISOString().split('T')[0],
+    date: formatDateOnly(now),
     completedAt: now.toISOString(),
     isMakeup: false,
     childId: store.currentChildId!
@@ -249,6 +251,14 @@ watch(showQuickModal, (newVal) => {
     document.documentElement.style.overflow = ''
   }
 })
+
+// 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
+const formatDateOnly = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 onMounted(() => {
   window.scrollTo(0, 0)

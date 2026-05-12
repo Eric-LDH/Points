@@ -138,11 +138,19 @@ import { useAppStore } from '@/stores'
 import type { Rule, PointsRecord } from '@/types'
 import { showToast } from '@/utils/toast'
 
+// 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
+const formatDateOnly = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const store = useAppStore()
 
 const enabledRules = computed(() => store.enabledRules)
 
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+const selectedDate = ref(formatDateOnly(new Date()))
 const mode = ref<'single' | 'batch'>('single')
 const selectedRules = ref<string[]>([])
 const note = ref('')
@@ -157,13 +165,14 @@ onMounted(() => {
 })
 
 const isToday = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = formatDateOnly(new Date())
   return selectedDate.value === today
 })
 
 const isYesterday = computed(() => {
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-  return selectedDate.value === yesterday
+  const yesterday = new Date(Date.now() - 86400000)
+  const yesterdayStr = formatDateOnly(yesterday)
+  return selectedDate.value === yesterdayStr
 })
 
 const weekDay = computed(() => {
@@ -183,13 +192,13 @@ const dayCount = computed(() => {
 const prevDay = () => {
   const date = new Date(selectedDate.value)
   date.setDate(date.getDate() - 1)
-  selectedDate.value = date.toISOString().split('T')[0]
+  selectedDate.value = formatDateOnly(date)
 }
 
 const nextDay = () => {
   const date = new Date(selectedDate.value)
   date.setDate(date.getDate() + 1)
-  selectedDate.value = date.toISOString().split('T')[0]
+  selectedDate.value = formatDateOnly(date)
 }
 
 const toggleRule = (rule: Rule) => {
@@ -275,7 +284,7 @@ const submitBatch = () => {
   let count = 0
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = formatDateOnly(d)
     
     batchSelectedRules.value.forEach(ruleId => {
       const rule = enabledRules.value.find(r => r.id === ruleId)

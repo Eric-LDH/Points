@@ -163,18 +163,23 @@ const weekDays = computed(() => {
   const childId = store.currentChildId
   const childRecords = pointsRecords.value.filter(r => r.childId === childId)
   const today = new Date()
+  // 使用本地时间获取日期字符串，避免时区问题
+  const todayStr = formatDateOnly(today)
+  
   const currentDay = today.getDay()
   const mondayOffset = currentDay === 0 ? 6 : currentDay - 1
   const monday = new Date(today)
   monday.setDate(monday.getDate() - mondayOffset)
   monday.setHours(0, 0, 0, 0)
+  
   const result = []
   const weekDayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const todayStr = today.toISOString().split('T')[0]
+  
   for (let i = 0; i < 7; i++) {
     const date = new Date(monday)
     date.setDate(date.getDate() + i)
-    const dateStr = date.toISOString().split('T')[0]
+    // 使用本地时间格式化日期
+    const dateStr = formatDateOnly(date)
     const dayRecords = childRecords.filter(r => r.date === dateStr)
     const dayPoints = dayRecords.reduce((sum, r) => sum + r.points, 0)
     result.push({
@@ -242,6 +247,14 @@ const recentRecords = computed(() => {
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
   return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+}
+
+// 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串
+const formatDateOnly = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 </script>
 
