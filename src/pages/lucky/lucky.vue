@@ -2,45 +2,44 @@
   <div class="lucky-page">
     <div class="page-header-section">
       <h1 class="page-title">幸运任务</h1>
-      <p class="page-subtitle">每天都有新挑战</p>
-    </div>
-    
-    <!-- 触发区域 -->
-    <div class="lucky-hero glass-card">
-      <div class="lucky-hero__glow" />
-      <div class="lucky-hero__content">
-        <div class="lucky-hero__icon">
-          <IconFont name="clover" :size="48" color="#6366F1" />
-        </div>
-        <button 
-          class="lucky-btn"
-          @click="drawLuckyTask"
-          :disabled="isDrawing"
-        >
-          <span v-if="isDrawing" class="lucky-btn__loading">
-            <IconFont name="add" :size="20" color="#fff" custom-class="spinning" />
-            抽取中...
-          </span>
-          <span v-else class="lucky-btn__text">
-            <IconFont name="star" :size="18" color="#fff" />
-            领取今日幸运任务
-          </span>
-        </button>
-      </div>
+      <p class="page-subtitle">转一转，抽取你的幸运任务</p>
     </div>
 
-    <!-- 今日任务展示 -->
+    <!-- 幸运转盘 -->
+    <div class="wheel-section glass-card">
+      <LuckyWheel
+        :tasks="tasks"
+        :selected-index="storedTaskIndex"
+        @draw="handleDraw"
+      />
+    </div>
+
+    <!-- 最新任务展示 -->
     <div v-if="todayTask" class="task-display glass-card" style="animation: slide-up 0.4s ease">
       <div class="task-display__ribbon">
-        <IconFont name="star" :size="12" color="#fff" />
-        今日幸运任务
-        <IconFont name="star" :size="12" color="#fff" />
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        最新幸运任务
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
       </div>
       <div class="task-display__body">
+        <div class="task-display__icon-wrap">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FBBF24" />
+          </svg>
+        </div>
         <p class="task-display__desc">{{ todayTask.task.description }}</p>
-        <div class="task-display__time">
-          <IconFont name="calendar" :size="12" color="var(--text-muted)" />
-          {{ formatTime(todayTask.drawnAt) }} 抽取
+        <div class="task-display__meta">
+          <div class="task-display__time">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            {{ formatTime(todayTask.drawnAt) }}
+          </div>
         </div>
       </div>
     </div>
@@ -48,15 +47,21 @@
     <!-- 空状态 -->
     <div v-else class="empty-state glass-card">
       <div class="empty-state__icon-wrap">
-        <IconFont name="clover" :size="40" color="var(--text-muted)" />
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="var(--text-muted)" fill="none" />
+          <path d="M12 8v4l2 2" stroke="var(--text-muted)" stroke-linecap="round" />
+        </svg>
       </div>
-      <p>点击上方按钮，抽取你的今日幸运任务</p>
+      <p>点击转盘中心的 GO！按钮，抽取幸运任务</p>
     </div>
 
     <!-- 配置提示 -->
     <div class="info-card glass-card">
       <div class="info-card__content">
-        <IconFont name="notes" :size="20" color="var(--primary-color)" />
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary-color)" stroke-width="2">
+          <path d="M12 6v6l4 2" />
+          <circle cx="12" cy="12" r="10" />
+        </svg>
         <div>
           <p class="info-card__text">任务列表可在「我的」页面中配置管理</p>
           <button class="btn btn--outline btn--sm" @click="goToConfig">
@@ -69,12 +74,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Storage } from '@/utils/storage'
 import type { LuckyTask } from '@/types'
 import { showToast } from '@/utils/toast'
-import IconFont from '@/components/IconFont.vue'
+import LuckyWheel from '@/components/LuckyWheel.vue'
 
 const router = useRouter()
 
@@ -84,32 +89,31 @@ interface TodayTask {
 }
 
 const todayTask = ref<TodayTask | null>(null)
-const isDrawing = ref(false)
+const tasks = ref<LuckyTask[]>([])
 
-const drawLuckyTask = () => {
-  const tasks = Storage.luckyTasks.getAll()
-  if (tasks.length === 0) {
-    showToast({ message: '还没有配置任何任务，请先去配置', type: 'warning' })
-    return
+// 已抽取任务在列表中的索引（用于轮盘高亮）
+const storedTaskIndex = computed(() => {
+  if (!todayTask.value) return null
+  const idx = tasks.value.findIndex(t => t.id === todayTask.value!.task.id)
+  return idx >= 0 ? idx : null
+})
+
+// 抽奖完成处理
+const handleDraw = (task: LuckyTask) => {
+  todayTask.value = {
+    task,
+    drawnAt: new Date().toISOString()
   }
-  isDrawing.value = true
-  setTimeout(() => {
-    const randomIndex = Math.floor(Math.random() * tasks.length)
-    const selectedTask = tasks[randomIndex]
-    todayTask.value = {
-      task: selectedTask,
-      drawnAt: new Date().toISOString()
-    }
-    localStorage.setItem('lucky_today_task', JSON.stringify(todayTask.value))
-    isDrawing.value = false
-    showToast({ message: '抽取成功！祝你好运！', type: 'success' })
-  }, 600)
+  localStorage.setItem('lucky_today_task', JSON.stringify(todayTask.value))
+  showToast({ message: '🎉 恭喜！获得了幸运任务！', type: 'success' })
 }
 
+// 格式化时间
 const formatTime = (timeStr: string) => {
   const date = new Date(timeStr)
-  // 使用本地时间格式化，避免时区问题
-  return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+  const h = date.getHours().toString().padStart(2, '0')
+  const m = date.getMinutes().toString().padStart(2, '0')
+  return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${h}:${m}`
 }
 
 const goToConfig = () => {
@@ -118,9 +122,19 @@ const goToConfig = () => {
 
 onMounted(() => {
   window.scrollTo(0, 0)
+
+  // 加载任务列表
+  tasks.value = Storage.luckyTasks.getAll()
+
+  // 加载今日已抽取任务
   const saved = localStorage.getItem('lucky_today_task')
   if (saved) {
-    try { todayTask.value = JSON.parse(saved) } catch (e) { console.error(e) }
+    try {
+      const parsed = JSON.parse(saved) as TodayTask
+      todayTask.value = parsed
+    } catch (e) {
+      console.error(e)
+    }
   }
 })
 </script>
@@ -134,111 +148,62 @@ onMounted(() => {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  animation: fade-in 0.5s ease;
+  animation: page-fade-in 0.5s ease;
 }
 
+// ===== 页面头部 =====
 .page-header-section {
   margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
 
 .page-title {
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 2px;
+  background: linear-gradient(135deg, var(--primary-color), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  width: 100%;
 
   .dark &, html.dark & {
     color: var(--dark-text-primary);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    color: var(--dark-text-primary);
+    -webkit-text-fill-color: initial;
+    background: none;
   }
 }
 
 .page-subtitle {
   font-size: 14px;
   color: var(--text-muted);
+  flex: 1;
+
+  .dark &, html.dark & {
+    color: var(--dark-text-muted);
+  }
 }
 
-// ===== 幸运抽奖区域 =====
-.lucky-hero {
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-  padding: var(--spacing-2xl) var(--spacing-lg);
+// ===== 转盘区域 =====
+.wheel-section {
+  padding: 0;
   margin-bottom: var(--spacing-xl);
-
-  &__glow {
-    position: absolute;
-    top: -50%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
-    pointer-events: none;
-  }
-
-  &__content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
-  }
-
-  &__icon {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(99, 102, 241, 0.08);
-    border-radius: 50%;
-  }
-}
-
-.lucky-btn {
-  width: 100%;
-  padding: 16px 24px;
-  border: none;
-  border-radius: var(--radius-xl);
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, #6366F1, #8B5CF6, #A78BFA);
-  background-size: 200% 200%;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-
-  &:active {
-    transform: scale(0.96);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  &__text, &__loading {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
 }
 
-// ===== 任务展示 =====
+// ===== 任务展示卡片 =====
 .task-display {
   overflow: hidden;
   padding: 0;
   margin-bottom: var(--spacing-xl);
+  animation: slide-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &__ribbon {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
@@ -255,33 +220,70 @@ onMounted(() => {
 
   &__body {
     padding: var(--spacing-lg);
+    text-align: center;
+  }
+
+  &__icon-wrap {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.08));
+    border-radius: 50%;
+    margin: 0 auto var(--spacing-md);
+    animation: icon-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   &__desc {
-    font-size: 17px;
+    font-size: 18px;
+    font-weight: 600;
     line-height: 1.7;
     color: var(--text-primary);
     margin-bottom: var(--spacing-md);
-    text-align: center;
 
     .dark &, html.dark & {
       color: var(--dark-text-primary);
     }
+  }
 
-    @media (prefers-color-scheme: dark) {
-      color: var(--dark-text-primary);
-    }
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
   }
 
   &__time {
     font-size: 12px;
     color: var(--text-muted);
-    text-align: right;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 4px;
+
+    .dark &, html.dark & {
+      color: var(--dark-text-muted);
+    }
   }
+
+  &__status {
+    font-size: 12px;
+    color: var(--warning-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 12px;
+  }
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning-color);
+  animation: status-pulse 2s ease-in-out infinite;
 }
 
 // ===== 空状态 =====
@@ -299,11 +301,16 @@ onMounted(() => {
     background: rgba(99, 102, 241, 0.05);
     border-radius: 50%;
     margin: 0 auto var(--spacing-lg);
+    animation: float 3s ease-in-out infinite;
   }
 
   p {
     font-size: 14px;
     color: var(--text-muted);
+
+    .dark &, html.dark & {
+      color: var(--dark-text-muted);
+    }
   }
 }
 
@@ -321,6 +328,10 @@ onMounted(() => {
     font-size: 13px;
     color: var(--text-muted);
     margin-bottom: var(--spacing-sm);
+
+    .dark &, html.dark & {
+      color: var(--dark-text-muted);
+    }
   }
 }
 
@@ -329,11 +340,8 @@ onMounted(() => {
   @include glass-card;
 }
 
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes fade-in {
+// ===== 关键帧 =====
+@keyframes page-fade-in {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
@@ -344,18 +352,14 @@ onMounted(() => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateX(0%) translateY(0) rotate(0deg); }
-  50% { transform: translateX(0%) translateY(-10px) rotate(5deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes icon-bounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 </style>
