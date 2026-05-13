@@ -204,8 +204,6 @@ const deleteRule = async (rule: Rule) => {
 @use '@/assets/main.scss' as *;
 
 .rule-list-page {
-  // 添加顶部安全区域，避免内容被状态栏遮挡
-  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
   animation: fade-in 0.5s ease;

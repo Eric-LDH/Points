@@ -244,7 +244,7 @@ const cancelExchange = async (record: ExchangeRecord) => {
 
 .exchange-page {
   padding: var(--spacing-lg);
-  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
+  padding-top: calc(60px + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;

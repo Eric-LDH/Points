@@ -181,7 +181,7 @@ html, body {
   .page-title {
     font-size: 20px;
     font-weight: 700;
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
   }
 }
 
@@ -190,8 +190,10 @@ html, body {
 .reward-list-page,
 .record-page,
 .rule-edit-page,
-.reward-form-page {
-  padding-top: calc(60px + env(safe-area-inset-top, 0px));
+.reward-form-page,
+.lucky-config-page {
+  padding-top: calc(72px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
 // ✅ 首页头部问候卡片（不固定）

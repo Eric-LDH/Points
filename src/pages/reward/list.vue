@@ -184,8 +184,6 @@ const getExchangeCount = (itemId: string) => {
 @use '@/assets/main.scss' as *;
 
 .reward-list-page {
-  // 头部固定高度 + 状态栏安全区域
-  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
   animation: fade-in 0.5s ease;
