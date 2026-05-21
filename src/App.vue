@@ -119,9 +119,8 @@ const updateStatusBarStyle = async (isDark: boolean) => {
   try {
     const capacitor = (window as any).Capacitor
     if (capacitor && capacitor.isNativePlatform()) {
-      await StatusBar.setBackgroundColor({ 
-        color: isDark ? '#0F172A' : '#EEF2FF' 
-      })
+      // 透明背景：页面CSS背景透过状态栏显示
+      await StatusBar.setBackgroundColor({ color: '#00000000' })
       await StatusBar.setStyle({ 
         style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
       })
@@ -139,11 +138,11 @@ const initStatusBar = async () => {
   try {
     const capacitor = (window as any).Capacitor
     if (capacitor && capacitor.isNativePlatform()) {
+      // overlay=true: WebView 延伸到状态栏下方
       await StatusBar.setOverlaysWebView({ overlay: true })
+      // 透明背景：让页面 CSS 渐变/头部背景透过状态栏显示，解决颜色不一致问题
+      await StatusBar.setBackgroundColor({ color: '#00000000' })
       const isDark = darkMode.value
-      await StatusBar.setBackgroundColor({ 
-        color: isDark ? '#0F172A' : '#EEF2FF' 
-      })
       await StatusBar.setStyle({ 
         style: isDark ? StatusBarStyle.Light : StatusBarStyle.Dark 
       })
