@@ -124,10 +124,15 @@
                 <div class="rule-option__points">{{ rule.points > 0 ? '+' : '' }}{{ rule.points }}分</div>
               </div>
             </div>
-            <div v-if="isRuleCompletedToday(rule.id)" class="rule-option__check">
-              <IconFont name="check" :size="16" color="#10B981" />
+            <div v-if="isRuleCompletedToday(rule.id)" class="rule-option__done">
+              <span class="done-badge">已完成</span>
+              <button class="btn-undo" @click.stop="cancelRuleCompletion(rule)">
+                <IconFont name="close" :size="14" color="var(--text-muted)" />
+              </button>
             </div>
           </div>
+        </div>
+        <div class="modal__footer">
         </div>
       </div>
     </div>
@@ -208,7 +213,10 @@ const showQuickRecord = (category: typeof categories[0]) => {
 }
 
 const selectRule = (rule: Rule) => {
-  if (isRuleCompletedToday(rule.id)) return
+  if (isRuleCompletedToday(rule.id)) {
+    cancelRuleCompletion(rule)
+    return
+  }
   const now = new Date()
   const record: Omit<PointsRecord, 'id'> = {
     ruleId: rule.id,
@@ -653,9 +661,10 @@ onMounted(() => {
   width: 100%;
   max-width: 480px;
   max-height: 85vh;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   animation: slide-up-modal 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &__header {
@@ -688,14 +697,20 @@ onMounted(() => {
 
   &__body {
     padding: var(--spacing-md) var(--spacing-lg);
-    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
-    max-height: calc(85vh - 60px);
+    max-height: calc(85vh - 110px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
     flex: 1;
+  }
+
+  &__footer {
+    padding: var(--spacing-sm) var(--spacing-lg) calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(99, 102, 241, 0.08);
+    display: flex;
+    justify-content: center;
   }
 }
 
@@ -724,7 +739,6 @@ onMounted(() => {
 
   &--done {
     opacity: 0.55;
-    pointer-events: none;
   }
 
   &__left {
@@ -757,6 +771,12 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  &__done {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 
