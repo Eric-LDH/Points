@@ -124,10 +124,13 @@ const currentRotation = ref(0)
 const wheelRef = ref<HTMLElement | null>(null)
 const resultIndex = ref<number | null>(null)
 
-// 计算扇区数据
+// 转盘最多展示 12 个扇区
+const MAX_SEGMENTS = 12
+
+// 计算扇区数据（只用于转盘视觉效果，不限制随机范围）
 const segments = computed(() => {
   const effectiveTasks = props.tasks.length > 0 ? props.tasks : []
-  const count = Math.min(effectiveTasks.length, 12)
+  const count = Math.min(effectiveTasks.length, MAX_SEGMENTS)
   if (count === 0) return []
 
   const sectorAngle = 360 / count
@@ -135,7 +138,7 @@ const segments = computed(() => {
   const cy = 150
   const r = 138
 
-  return effectiveTasks.slice(0, 12).map((task, i) => {
+  return effectiveTasks.slice(0, MAX_SEGMENTS).map((task, i) => {
     const startAngle = i * sectorAngle - 90
     const endAngle = (i + 1) * sectorAngle - 90
     const startRad = (startAngle * Math.PI) / 180
@@ -166,23 +169,38 @@ const wheelStyle = computed(() => ({
 }))
 
 // 监听 selectedIndex 外部变化（用于恢复今日已抽状态）
+// selectedIndex 是任务在完整列表中的索引，需要映射到转盘视觉扇区
 watch(() => props.selectedIndex, (val) => {
   if (val !== null && val !== undefined && !spinning.value) {
-    resultIndex.value = val
+    resultIndex.value = mapTaskIndexToSegment(val)
   }
 }, { immediate: true })
 
 // 开始旋转
 let spinTimer: ReturnType<typeof setTimeout> | null = null
 
+/**
+ * 将任务在完整列表中的索引映射到转盘视觉扇区索引
+ * 例如：40 个任务，转盘显示 12 个扇区，任务 #25 映射到扇区 25 % 12 = 1
+ */
+const mapTaskIndexToSegment = (taskIndex: number): number => {
+  const segmentCount = Math.min(props.tasks.length, MAX_SEGMENTS)
+  if (segmentCount === 0) return 0
+  return taskIndex % segmentCount
+}
+
 const startSpin = () => {
   if (spinning.value || props.disabled || props.tasks.length === 0) return
 
-  // 计算目标角度：多圈旋转 + 落在目标扇区
-  const targetIndex = Math.floor(Math.random() * Math.min(props.tasks.length, 12))
-  const sectorAngle = 360 / Math.min(props.tasks.length, 12)
+  // 从全部任务中随机选取（不再限制为前12个）
+  const targetTaskIndex = Math.floor(Math.random() * props.tasks.length)
+  // 映射到转盘视觉扇区
+  const targetSegmentIndex = mapTaskIndexToSegment(targetTaskIndex)
+
+  const segmentCount = Math.min(props.tasks.length, MAX_SEGMENTS)
+  const sectorAngle = 360 / segmentCount
   const baseTurns = 5 + Math.floor(Math.random() * 3) // 5-7 圈
-  const targetEffectiveAngle = targetIndex * sectorAngle + sectorAngle / 2
+  const targetEffectiveAngle = targetSegmentIndex * sectorAngle + sectorAngle / 2
   const targetRotation = (360 - targetEffectiveAngle % 360 + 360) % 360
   const newRotation = currentRotation.value + baseTurns * 360 + targetRotation
 
@@ -208,10 +226,12 @@ const startSpin = () => {
   // 固定时长后结束旋转（不依赖 transitionend 事件，更可靠）
   spinTimer = setTimeout(() => {
     spinning.value = false
-    resultIndex.value = targetIndex
+    // resultIndex 存视觉扇区索引，用于轮盘高亮
+    resultIndex.value = targetSegmentIndex
     currentRotation.value = newRotation % 360
 
-    const selectedTask = props.tasks[targetIndex]
+    // 使用从全部任务中随机选出的任务
+    const selectedTask = props.tasks[targetTaskIndex]
     if (selectedTask) {
       emit('draw', selectedTask)
     }
