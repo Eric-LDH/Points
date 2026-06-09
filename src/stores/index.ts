@@ -133,7 +133,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   function updateRule(id: string, updates: Partial<Rule>) {
-    const { icon, createdAt, ...safeUpdates } = updates
+    const { createdAt, ...safeUpdates } = updates
     Storage.rules.update(id, safeUpdates)
     const index = rules.value.findIndex(r => r.id === id)
     if (index !== -1) {
