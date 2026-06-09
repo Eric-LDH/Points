@@ -52,7 +52,7 @@
         <div class="menu-item" @click="goToLuckyConfig">
           <div class="menu-item__left">
             <div class="menu-item__icon menu-item__icon--purple">
-              <IconFont name="star" :size="20" color="#8B5CF6" />
+              <IconFont name="clover" :size="20" color="#8B5CF6" />
             </div>
             <span class="menu-item__title">幸运任务配置</span>
           </div>
