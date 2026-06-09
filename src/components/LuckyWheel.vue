@@ -16,6 +16,7 @@
 
     <!-- 转盘容器 -->
     <div class="wheel-container" :class="{ 'is-single': segments.length === 1 }">
+      <div class="wheel-glow-ring" />
       <div class="wheel-outer-ring">
         <div
           v-for="dot in 24"
@@ -292,6 +293,30 @@ defineExpose({ resultIndex })
   justify-content: center;
 }
 
+// ===== 光环装饰 =====
+.wheel-glow-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(99,102,241,0.25), rgba(251,191,36,0.15), rgba(99,102,241,0.25), rgba(168,85,247,0.15), rgba(99,102,241,0.25));
+  animation: glow-spin 8s linear infinite;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 50px rgba(99, 102, 241, 0.25), 0 0 100px rgba(251, 191, 36, 0.15);
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+}
+
 // ===== 外圈装饰点 =====
 .wheel-outer-ring {
   position: absolute;
@@ -470,5 +495,10 @@ defineExpose({ resultIndex })
 @keyframes spin-anim {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes glow-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 </style>

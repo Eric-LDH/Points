@@ -32,7 +32,6 @@
 
     <!-- 幸运转盘 -->
     <div class="wheel-section">
-      <div class="wheel-glow-ring" />
       <div class="wheel-card glass-card">
         <LuckyWheel
           :tasks="tasks"
@@ -285,27 +284,6 @@ onMounted(() => {
   z-index: 1;
 }
 
-.wheel-glow-ring {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, rgba(99,102,241,0.15), rgba(251,191,36,0.1), rgba(99,102,241,0.15), rgba(168,85,247,0.1), rgba(99,102,241,0.15));
-  animation: glow-spin 8s linear infinite;
-  will-change: transform;
-  pointer-events: none;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 10px;
-    border-radius: 50%;
-    background: transparent;
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.2), 0 0 80px rgba(251, 191, 36, 0.1);
-    animation: glow-pulse 3s ease-in-out infinite;
-  }
-}
-
 .wheel-card {
   position: relative;
   padding: 0;
@@ -537,16 +515,6 @@ onMounted(() => {
   25% { transform: translateY(-6px) rotate(90deg) scale(1.05); }
   50% { transform: translateY(0) rotate(180deg) scale(1); }
   75% { transform: translateY(-4px) rotate(270deg) scale(1.03); }
-}
-
-@keyframes glow-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
 }
 
 @keyframes shimmer {
