@@ -17,6 +17,7 @@
             type="date" 
             v-model="selectedDate"
             class="date-input"
+            @change="clearSelection"
           />
         </div>
         <button class="btn btn--primary btn--sm" @click="nextDay">▶</button>
@@ -28,26 +29,8 @@
       </div>
     </div>
 
-    <!-- 补录模式切换 -->
-    <div class="mode-switch">
-      <div 
-        class="mode-option"
-        :class="{ active: mode === 'single' }"
-        @click="mode = 'single'"
-      >
-        <span>单日补录</span>
-      </div>
-      <div 
-        class="mode-option"
-        :class="{ active: mode === 'batch' }"
-        @click="mode = 'batch'"
-      >
-        <span>批量补录</span>
-      </div>
-    </div>
-
     <!-- 单日补录 -->
-    <div v-if="mode === 'single'" class="single-mode">
+    <div class="single-mode">
       <div class="section">
         <h2 class="section-title">选择规则</h2>
         <div class="rules-grid">
@@ -57,7 +40,8 @@
             class="rule-card"
             :class="{ 
               selected: selectedRules.includes(rule.id),
-              disabled: isRuleCompletedOnDate(rule.id, selectedDate)
+              disabled: isRuleCompletedOnDate(rule.id, selectedDate) && !cancelRuleIds.includes(rule.id),
+              'cancel-marked': cancelRuleIds.includes(rule.id)
             }"
             @click="toggleRule(rule)"
           >
@@ -67,7 +51,8 @@
               <div class="rule-card__points">{{ rule.points > 0 ? '+' : '' }}{{ rule.points }}分</div>
             </div>
             <div v-if="selectedRules.includes(rule.id)" class="checkmark">✓</div>
-            <div v-if="isRuleCompletedOnDate(rule.id, selectedDate)" class="completed-flag">
+            <div v-if="cancelRuleIds.includes(rule.id)" class="cancel-mark">✕</div>
+            <div v-else-if="isRuleCompletedOnDate(rule.id, selectedDate)" class="completed-flag">
               已完成
             </div>
           </div>
@@ -89,46 +74,7 @@
       </button>
     </div>
 
-    <!-- 批量补录 -->
-    <div v-else class="batch-mode">
-      <div class="section">
-        <h2 class="section-title">日期范围</h2>
-        <div class="date-range">
-          <div class="date-field">
-            <label>开始日期</label>
-            <input type="date" v-model="batchStartDate" class="input" />
-          </div>
-          <div class="date-field">
-            <label>结束日期</label>
-            <input type="date" v-model="batchEndDate" class="input" />
-          </div>
-        </div>
-      </div>
 
-      <div class="section">
-        <h2 class="section-title">选择规则</h2>
-        <div class="rules-list">
-          <div 
-            v-for="rule in enabledRules" 
-            :key="rule.id"
-            class="rule-item"
-            :class="{ selected: batchSelectedRules.includes(rule.id) }"
-            @click="toggleBatchRule(rule)"
-          >
-            <span class="rule-item__icon">{{ rule.icon }}</span>
-            <div class="rule-item__info">
-              <div class="rule-item__name">{{ rule.name }}</div>
-              <div class="rule-item__category">{{ rule.category }}</div>
-            </div>
-            <div class="rule-item__points">{{ rule.points > 0 ? '+' : '' }}{{ rule.points }}分</div>
-          </div>
-        </div>
-      </div>
-
-      <button class="btn btn--primary btn--large" @click="submitBatch">
-        📋 批量补录 ({{ dayCount }}天)
-      </button>
-    </div>
   </div>
 </template>
 
@@ -151,17 +97,20 @@ const store = useAppStore()
 const enabledRules = computed(() => store.enabledRules)
 
 const selectedDate = ref(formatDateOnly(new Date()))
-const mode = ref<'single' | 'batch'>('single')
 const selectedRules = ref<string[]>([])
+const cancelRuleIds = ref<string[]>([])
 const note = ref('')
-
-const batchStartDate = ref('')
-const batchEndDate = ref('')
-const batchSelectedRules = ref<string[]>([])
 
 // 页面挂载时滚动到顶部
 onMounted(() => {
   window.scrollTo(0, 0)
+})
+
+// 选中日期对应的积分记录（修复：基于 selectedDate 而非 today）
+const recordsForSelectedDate = computed(() => {
+  return store.pointsRecords.filter(
+    r => r.date === selectedDate.value && r.childId === store.currentChildId
+  )
 })
 
 const isToday = computed(() => {
@@ -181,33 +130,40 @@ const weekDay = computed(() => {
   return weekDays[date.getDay()]
 })
 
-const dayCount = computed(() => {
-  if (!batchStartDate.value || !batchEndDate.value) return 0
-  const start = new Date(batchStartDate.value)
-  const end = new Date(batchEndDate.value)
-  const diff = end.getTime() - start.getTime()
-  return Math.floor(diff / 86400000) + 1
-})
-
 const prevDay = () => {
   const date = new Date(selectedDate.value)
   date.setDate(date.getDate() - 1)
   selectedDate.value = formatDateOnly(date)
+  clearSelection()
 }
 
 const nextDay = () => {
   const date = new Date(selectedDate.value)
   date.setDate(date.getDate() + 1)
   selectedDate.value = formatDateOnly(date)
+  clearSelection()
+}
+
+const clearSelection = () => {
+  selectedRules.value = []
+  cancelRuleIds.value = []
 }
 
 const toggleRule = (rule: Rule) => {
-  // 如果该规则在今天已经完成，不允许选择
-  if (isRuleCompletedOnDate(rule.id, selectedDate.value)) {
-    showToast({ message: '该规则在选定的日期已经完成过了，无法重复补录！', type: 'warning' })
+  const isCompleted = isRuleCompletedOnDate(rule.id, selectedDate.value)
+  
+  if (isCompleted) {
+    // 已完成项：点击切换取消状态
+    const idx = cancelRuleIds.value.indexOf(rule.id)
+    if (idx === -1) {
+      cancelRuleIds.value.push(rule.id)
+    } else {
+      cancelRuleIds.value.splice(idx, 1)
+    }
     return
   }
   
+  // 未完成项：正常切换选择状态
   const index = selectedRules.value.indexOf(rule.id)
   if (index === -1) {
     selectedRules.value.push(rule.id)
@@ -216,35 +172,26 @@ const toggleRule = (rule: Rule) => {
   }
 }
 
-const toggleBatchRule = (rule: Rule) => {
-  const index = batchSelectedRules.value.indexOf(rule.id)
-  if (index === -1) {
-    batchSelectedRules.value.push(rule.id)
-  } else {
-    batchSelectedRules.value.splice(index, 1)
-  }
-}
-
 const submitSingle = () => {
-  if (selectedRules.value.length === 0) {
-    showToast({ message: '请至少选择一个规则', type: 'warning' })
+  // 如果没有选择任何操作
+  if (selectedRules.value.length === 0 && cancelRuleIds.value.length === 0) {
+    showToast({ message: '请至少选择一个规则进行补录或取消', type: 'warning' })
     return
   }
 
-  // 再次检查是否有规则已经存在
-  const existingRules = selectedRules.value.filter(ruleId => 
-    isRuleCompletedOnDate(ruleId, selectedDate.value)
-  )
-  
-  if (existingRules.length > 0) {
-    const ruleNames = existingRules.map(id => {
-      const rule = enabledRules.value.find(r => r.id === id)
-      return rule ? rule.name : ''
-    }).filter(name => name).join(', ')
-    showToast({ message: `以下规则在 ${selectedDate.value} 已经完成，无法重复补录：${ruleNames}`, type: 'warning' })
-    return
-  }
+  let cancelCount = 0
+  let addCount = 0
 
+  // 处理取消：删除已完成记录的积分
+  cancelRuleIds.value.forEach(ruleId => {
+    const record = recordsForSelectedDate.value.find(r => r.ruleId === ruleId)
+    if (record) {
+      store.deletePointsRecord(record.id)
+      cancelCount++
+    }
+  })
+
+  // 处理补录：添加新记录
   selectedRules.value.forEach(ruleId => {
     const rule = enabledRules.value.find(r => r.id === ruleId)
     if (rule) {
@@ -260,60 +207,24 @@ const submitSingle = () => {
         note: note.value
       }
       store.addPointsRecord(record)
+      addCount++
     }
   })
 
-  showToast({ message: `成功补录 ${selectedRules.value.length} 项积分！`, type: 'success' })
+  // 提示结果
+  const msgs: string[] = []
+  if (addCount > 0) msgs.push(`成功补录 ${addCount} 项积分`)
+  if (cancelCount > 0) msgs.push(`已取消 ${cancelCount} 项积分`)
+  showToast({ message: msgs.join('，'), type: 'success' })
+  
   selectedRules.value = []
+  cancelRuleIds.value = []
   note.value = ''
-}
-
-const submitBatch = () => {
-  if (batchSelectedRules.value.length === 0) {
-    showToast({ message: '请至少选择一个规则', type: 'warning' })
-    return
-  }
-
-  if (!batchStartDate.value || !batchEndDate.value) {
-    showToast({ message: '请选择日期范围', type: 'warning' })
-    return
-  }
-
-  const start = new Date(batchStartDate.value)
-  const end = new Date(batchEndDate.value)
-  let count = 0
-
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const dateStr = formatDateOnly(d)
-    
-    batchSelectedRules.value.forEach(ruleId => {
-      const rule = enabledRules.value.find(r => r.id === ruleId)
-      if (rule) {
-        const record: Omit<PointsRecord, 'id'> = {
-          ruleId: rule.id,
-          ruleName: rule.name,
-          ruleIcon: rule.icon,
-          points: rule.points,
-          date: dateStr,
-          completedAt: new Date().toISOString(),
-          isMakeup: true,
-          childId: store.currentChildId!
-        }
-        store.addPointsRecord(record)
-        count++
-      }
-    })
-  }
-
-  showToast({ message: `成功批量补录 ${count} 条记录！`, type: 'success' })
-  batchSelectedRules.value = []
-  batchStartDate.value = ''
-  batchEndDate.value = ''
 }
 
 // 检查规则在指定日期是否已完成
 const isRuleCompletedOnDate = (ruleId: string, date: string) => {
-  return store.todayRecords.some(r => r.ruleId === ruleId && r.date === date)
+  return recordsForSelectedDate.value.some(r => r.ruleId === ruleId && r.date === date)
 }
 
 const goBack = () => {
@@ -374,41 +285,6 @@ const goBack = () => {
   color: var(--text-primary);
 }
 
-.mode-switch {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
-  background: var(--card-bg);
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-}
-
-.mode-option {
-  flex: 1;
-  padding: var(--spacing-md);
-  text-align: center;
-  background: var(--bg-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  color: var(--text-primary);
-  
-  &.active {
-    background: var(--primary-color);
-    color: white !important;
-  }
-  
-  @media (prefers-color-scheme: dark) {
-    background: var(--dark-bg);
-    color: var(--dark-text-primary);
-    
-    &.active {
-      background: var(--primary-color);
-      color: white !important;
-    }
-  }
-}
-
 .section {
   margin-bottom: var(--spacing-xl);
 }
@@ -456,9 +332,15 @@ const goBack = () => {
   
   &.disabled {
     opacity: 0.5;
-    cursor: not-allowed;
+    cursor: pointer;
     background: rgba(107, 114, 128, 0.05);
     
+  }
+  
+  &.cancel-marked {
+    border: 2px solid var(--danger-color, #ef4444);
+    background: rgba(239, 68, 68, 0.08);
+    opacity: 1;
   }
   
   &__icon {
@@ -502,15 +384,27 @@ const goBack = () => {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 40px;
-  height: 20px;
+  padding: 2px 8px;
   background: var(--text-muted);
   color: white;
   border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.cancel-mark {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--danger-color, #ef4444);
+  color: white;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  font-weight: bold;
 }
 
 .note-input {
@@ -530,91 +424,6 @@ const goBack = () => {
   
   &::placeholder {
     color: var(--text-muted);
-  }
-}
-
-.date-range {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.date-field {
-  flex: 1;
-  
-  label {
-    display: block;
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-sm);
-  }
-  
-  .input {
-    width: 100%;
-    padding: var(--spacing-md);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    background: var(--card-bg);
-    color: var(--text-primary);
-    
-    &:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-  }
-}
-
-.rules-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.rule-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-  
-  &.selected {
-    border: 2px solid var(--primary-color);
-  }
-  
-  &__icon {
-    font-size: 32px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  
-  &__info {
-    flex: 1;
-  }
-  
-  &__name {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: var(--spacing-xs);
-    color: var(--text-primary);
-  }
-  
-  &__category {
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-  
-  &__points {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--success-color);
   }
 }
 

@@ -22,7 +22,7 @@
           v-for="dot in 24"
           :key="dot"
           class="wheel-dot"
-          :style="{ transform: `rotate(${dot * 15}deg) translateY(-${dot % 2 === 0 ? 138 : 142}px)` }"
+          :style="{ transform: `rotate(${dot * 15}deg) translateY(-137px) translate(-50%, -50%)` }"
         />
       </div>
       <div class="wheel-rotate" ref="wheelRef" :style="wheelStyle">
@@ -299,8 +299,8 @@ defineExpose({ resultIndex })
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 340px;
-  height: 340px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, rgba(99,102,241,0.25), rgba(251,191,36,0.15), rgba(99,102,241,0.25), rgba(168,85,247,0.15), rgba(99,102,241,0.25));
   animation: glow-spin 8s linear infinite;

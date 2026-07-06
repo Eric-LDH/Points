@@ -208,7 +208,11 @@ const showQuickRecord = (category: typeof categories[0]) => {
 }
 
 const selectRule = (rule: Rule) => {
-  if (isRuleCompletedToday(rule.id)) return
+  // 在弹窗中，已完成项点击后取消（与待完成奖励行为一致）
+  if (isRuleCompletedToday(rule.id)) {
+    cancelRuleCompletion(rule)
+    return
+  }
   const now = new Date()
   const record: Omit<PointsRecord, 'id'> = {
     ruleId: rule.id,
@@ -723,8 +727,8 @@ onMounted(() => {
   @include glass(0.3, 8px, 0.06);
 
   &--done {
-    opacity: 0.55;
-    pointer-events: none;
+    opacity: 0.65;
+    cursor: pointer;
   }
 
   &__left {

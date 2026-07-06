@@ -375,7 +375,8 @@ html.dark,
     }
     
     .completed-flag {
-      color: var(--text-muted);
+      background: var(--dark-text-muted);
+      color: var(--dark-text-primary);
     }
   }
   
