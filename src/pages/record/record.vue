@@ -31,11 +31,11 @@
 
     <!-- 单日补录 -->
     <div class="single-mode">
-      <div class="section">
-        <h2 class="section-title">选择规则</h2>
+      <div v-for="group in groupedRules" :key="group.category" class="section">
+        <h2 class="section-title">{{ group.category }}</h2>
         <div class="rules-grid">
           <div 
-            v-for="rule in enabledRules" 
+            v-for="rule in group.rules" 
             :key="rule.id"
             class="rule-card"
             :class="{ 
@@ -95,6 +95,20 @@ const formatDateOnly = (date: Date): string => {
 const store = useAppStore()
 
 const enabledRules = computed(() => store.enabledRules)
+
+// 按分类分组的规则
+const groupedRules = computed(() => {
+  const groups: { category: string; rules: Rule[] }[] = []
+  const categoryOrder = ['学习习惯', '生活习惯', '家务', '加分项', '惩罚']
+  
+  for (const cat of categoryOrder) {
+    const rulesInCat = enabledRules.value.filter(r => r.category === cat)
+    if (rulesInCat.length > 0) {
+      groups.push({ category: cat, rules: rulesInCat })
+    }
+  }
+  return groups
+})
 
 const selectedDate = ref(formatDateOnly(new Date()))
 const selectedRules = ref<string[]>([])
