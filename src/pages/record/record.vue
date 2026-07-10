@@ -99,7 +99,7 @@ const enabledRules = computed(() => store.enabledRules)
 // 按分类分组的规则
 const groupedRules = computed(() => {
   const groups: { category: string; rules: Rule[] }[] = []
-  const categoryOrder = ['学习习惯', '生活习惯', '家务', '加分项', '惩罚']
+  const categoryOrder = ['家务', '生活习惯','学习习惯',  '加分项', '惩罚']
   
   for (const cat of categoryOrder) {
     const rulesInCat = enabledRules.value.filter(r => r.category === cat)

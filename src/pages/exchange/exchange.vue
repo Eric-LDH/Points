@@ -110,7 +110,7 @@
           </div>
           <div v-else class="records-list">
             <div 
-              v-for="record in exchangeRecords" 
+              v-for="record in exchangeRecords.reverse()" 
               :key="record.id"
               class="record-item glass-card"
             >
