@@ -71,6 +71,12 @@ const routes: RouteRecordRaw[] = [
     name: 'RewardList',
     component: () => import('@/pages/reward/list.vue'),
     meta: { title: '兑换商品管理' }
+  },
+  {
+    path: '/history',
+    name: 'History',
+    component: () => import('@/pages/history/history.vue'),
+    meta: { title: '历史积分' }
   }
 ]
 

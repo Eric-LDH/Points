@@ -5,7 +5,7 @@
       <button class="btn btn--primary btn--sm" @click="goBack">
         ←
       </button>
-      <h1 class="page-title">📝 手工补录</h1>
+      <h1 class="page-title">手工补录</h1>
     </div>
     
     <!-- 日期选择 -->

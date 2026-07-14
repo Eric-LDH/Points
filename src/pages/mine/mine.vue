@@ -61,11 +61,11 @@
       </div>
     </div>
 
-    <!-- 补录管理 -->
+    <!-- 积分记录管理 -->
     <div class="section">
       <h2 class="section-title">
         <IconFont name="notes" :size="16" color="var(--primary-color)" />
-        补录管理
+        积分记录管理
       </h2>
       <div class="menu-list glass-card">
         <div class="menu-item" @click="goToRecord">
@@ -74,6 +74,15 @@
               <IconFont name="calendar" :size="20" color="#3B82F6" />
             </div>
             <span class="menu-item__title">手工补录</span>
+          </div>
+          <IconFont name="arrowRight" :size="18" color="var(--text-muted)" />
+        </div>
+        <div class="menu-item" @click="goToHistory">
+          <div class="menu-item__left">
+            <div class="menu-item__icon menu-item__icon--primary">
+              <IconFont name="chart" :size="20" color="#6366F1" />
+            </div>
+            <span class="menu-item__title">历史积分</span>
           </div>
           <IconFont name="arrowRight" :size="18" color="var(--text-muted)" />
         </div>
@@ -312,6 +321,7 @@ const goToRuleList = () => router.push('/rule/list')
 const goToRewardManage = () => router.push('/reward/list')
 const goToLuckyConfig = () => router.push('/lucky/config')
 const goToRecord = () => router.push('/record')
+const goToHistory = () => router.push('/history')
 
 const switchChild = (id: string) => { store.switchChild(id); showChildSwitch.value = false }
 const toggleDarkMode = () => { store.toggleDarkMode() }
