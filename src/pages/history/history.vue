@@ -62,7 +62,7 @@
       </div>
       <div v-else class="summary-list">
         <div
-          v-for="item in chartData"
+          v-for="item in chartData.reverse()"
           :key="item.label"
           class="summary-card glass-card"
         >
