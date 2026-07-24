@@ -5,3 +5,4 @@ android/**/build/
 android/capacitor-cordova-android-plugins/build/
 *.log
 .DS_Store
+deploy/
