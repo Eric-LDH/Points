@@ -279,7 +279,7 @@ function updateChart() {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params
         return `<div style="font-weight:600;margin-bottom:4px">${p.axisValue}</div>
-          <div>净得分：<span style="color:${lineColor};font-weight:700">${p.value >= 0 ? '+' : ''}${p.value}</span></div>`
+          <div>得分：<span style="color:${lineColor};font-weight:700">${p.value >= 0 ? '+' : ''}${p.value}</span></div>`
       }
     },
     grid: { left: 44, right: 20, top: 16, bottom: 32 },
@@ -307,9 +307,19 @@ function updateChart() {
       data: data.map(d => d.points),
       smooth: true,
       symbol: 'circle',
-      symbolSize: 4,
+      symbolSize: 6,
       lineStyle: { color: lineColor, width: 2.5 },
       itemStyle: { color: lineColor },
+      label: {
+        show: true,
+        position: 'top',
+        color: isDark ? '#e2e8f0' : '#1e293b',
+        fontSize: 10,
+        fontWeight: 500,
+        formatter: (params: any) => {
+          return params.value >= 0 ? `+${params.value}` : `${params.value}`
+        }
+      },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: areaColorTop },
