@@ -62,7 +62,7 @@
       </div>
       <div v-else class="summary-list">
         <div
-          v-for="item in chartData.reverse()"
+          v-for="item in reversedChartData"
           :key="item.label"
           class="summary-card glass-card"
         >
@@ -247,6 +247,9 @@ const chartData = computed(() => {
   if (granularity.value === 'week') return getWeekData(dayData)
   return getMonthData(dayData)
 })
+
+// 倒序展示（基于副本，避免原地 reverse 修改 computed 缓存影响图表数据）
+const reversedChartData = computed(() => [...chartData.value].reverse())
 
 // ECharts 初始化和更新
 function initChart() {

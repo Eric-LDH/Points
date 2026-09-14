@@ -110,7 +110,7 @@
           </div>
           <div v-else class="records-list">
             <div 
-              v-for="record in exchangeRecords.reverse()" 
+              v-for="record in sortedRecords" 
               :key="record.id"
               class="record-item glass-card"
             >
@@ -165,6 +165,8 @@ useModalLock(showRecords)
 const totalPoints = computed(() => store.totalPoints)
 const enabledRewardItems = computed(() => store.enabledRewardItems)
 const exchangeRecords = computed(() => store.exchangeRecords)
+// 按时间倒序展示（基于副本，避免原地 reverse 修改响应式源数组导致无限渲染循环）
+const sortedRecords = computed(() => [...exchangeRecords.value].reverse())
 
 onMounted(() => { window.scrollTo(0, 0) })
 
