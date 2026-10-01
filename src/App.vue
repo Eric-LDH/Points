@@ -98,6 +98,21 @@ watch(() => route.path, (newPath, oldPath) => {
 
 // Android 返回键监听器
 let backButtonListener: any = null
+// 回到前台监听器
+let resumeListener: any = null
+
+/**
+ * 把系统里已排期的通知与当前提醒配置对齐。
+ * App 被系统回收、手机重启、权限被改动后，都靠这一步把提醒补回来。
+ * 这里不申请权限（requestPermission=false），避免启动即弹授权框打扰用户。
+ */
+const syncRemindersOnForeground = async () => {
+  try {
+    await store.syncReminders(false)
+  } catch (error) {
+    console.error('提醒对账失败:', error)
+  }
+}
 
 // 监听确认对话框状态变化
 watch(confirmVisible, (newVal: boolean) => {
@@ -162,9 +177,17 @@ onMounted(async () => {
   }
   
   await initStatusBar()
-  
+
+  // 启动时对账一次提醒排期
+  await syncRemindersOnForeground()
+
   const capacitor = (window as any).Capacitor
   if (capacitor && capacitor.isNativePlatform()) {
+    // 回到前台时再次对账：这是「强行停止后自愈」的关键一环
+    resumeListener = App.addListener('resume', () => {
+      syncRemindersOnForeground()
+    })
+
     backButtonListener = App.addListener('backButton', (data: { canGoBack: boolean }) => {
       if (hasOpenModal()) {
         if (confirmVisible.value) {
@@ -195,6 +218,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (backButtonListener) {
     backButtonListener.remove()
+  }
+  if (resumeListener) {
+    resumeListener.remove()
   }
 })
 </script>

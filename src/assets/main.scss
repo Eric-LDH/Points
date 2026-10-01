@@ -151,7 +151,9 @@ html, body {
 .record-page .header,
 .rule-edit-page .header,
 .reward-form-page .header,
-.lucky-config-page .header {
+.lucky-config-page .header,
+.reminder-list-page .header,
+.reminder-edit-page .header {
   position: fixed;
   top: 0;
   left: 50%;
@@ -190,7 +192,9 @@ html, body {
 .record-page,
 .rule-edit-page,
 .reward-form-page,
-.lucky-config-page {
+.lucky-config-page,
+.reminder-list-page,
+.reminder-edit-page {
   padding-top: calc(72px + env(safe-area-inset-top, 0px));
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
@@ -1233,6 +1237,105 @@ html.dark,
             background: var(--primary-color);
           }
         }
+      }
+    }
+  }
+  
+  // ✅ 提醒通知管理页面（深色模式）
+  .reminder-list-page {
+    .header {
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .sync-info {
+      color: var(--dark-text-secondary);
+    }
+    
+    .reminder-card {
+      &__title {
+        color: var(--dark-text-primary);
+      }
+      
+      &__body {
+        color: var(--dark-text-secondary);
+      }
+      
+      &__actions {
+        border-top-color: var(--dark-border);
+      }
+    }
+    
+    .icon-btn {
+      border-color: var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+    
+    .empty-state {
+      p {
+        color: var(--dark-text-secondary);
+      }
+      
+      &__hint {
+        color: var(--dark-text-muted) !important;
+      }
+    }
+    
+    .tips-card {
+      &__title {
+        color: var(--dark-text-primary);
+      }
+      
+      &__list li {
+        color: var(--dark-text-secondary);
+      }
+    }
+  }
+  
+  // ✅ 提醒新增/编辑页面（深色模式）
+  .reminder-edit-page {
+    .header {
+      background: transparent !important;
+      
+      .page-title {
+        color: var(--dark-text-primary) !important;
+      }
+    }
+    
+    .form-label {
+      color: var(--dark-text-primary);
+    }
+    
+    .form-tip,
+    .test-hint {
+      color: var(--dark-text-muted);
+    }
+    
+    .quick-time {
+      background: var(--dark-card-bg);
+      border-color: var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+    
+    .preview-card {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.35);
+      
+      &__name {
+        color: var(--dark-text-primary);
+      }
+      
+      &__body {
+        color: var(--dark-text-secondary);
+      }
+    }
+    
+    .switch {
+      background: var(--dark-border);
+      
+      &.active {
+        background: var(--primary-color);
       }
     }
   }

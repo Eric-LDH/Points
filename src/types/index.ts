@@ -78,6 +78,29 @@ export interface LuckyTask {
   updatedAt: string
 }
 
+// 定时提醒模型
+export interface Reminder {
+  id: string
+  notifyId: number // 系统通知 ID（Android 为 32 位整数），用于排期与取消
+  title: string // 通知标题
+  body: string // 通知内容
+  hour: number // 0-23
+  minute: number // 0-59
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// 通知权限与排期状态
+export interface ReminderNotificationState {
+  supported: boolean // 是否运行在支持系统通知的环境（原生 App）
+  permission: 'granted' | 'denied' | 'unsupported'
+  exactAlarmGranted: boolean // 是否拥有精确闹钟权限（Android 12+）
+  scheduled: number // 当前已排期的提醒条数
+  lastSyncAt: string | null
+  lastError: string | null
+}
+
 // 备份数据模型
 export interface BackupData {
   rules: Rule[]
@@ -86,6 +109,7 @@ export interface BackupData {
   exchangeRecords: ExchangeRecord[]
   children: Child[]
   luckyTasks?: LuckyTask[] // 可选，兼容旧版本
+  reminders?: Reminder[] // 可选，兼容旧版本
   backupAt: string
   version: string
 }

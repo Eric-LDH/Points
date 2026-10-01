@@ -119,6 +119,28 @@
       </div>
     </div>
 
+    <!-- 提醒通知 -->
+    <div class="section">
+      <h2 class="section-title">
+        <IconFont name="bell" :size="16" color="var(--primary-color)" />
+        提醒与通知
+      </h2>
+      <div class="menu-list glass-card">
+        <div class="menu-item" @click="goToReminderList">
+          <div class="menu-item__left">
+            <div class="menu-item__icon menu-item__icon--warning">
+              <IconFont name="bell" :size="20" color="#F59E0B" />
+            </div>
+            <span class="menu-item__title">提醒通知</span>
+          </div>
+          <div class="menu-item__right">
+            <span class="menu-item__meta">{{ reminderSummary }}</span>
+            <IconFont name="arrowRight" :size="18" color="var(--text-muted)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 系统设置 -->
     <div class="section">
       <h2 class="section-title">
@@ -322,6 +344,13 @@ const goToRewardManage = () => router.push('/reward/list')
 const goToLuckyConfig = () => router.push('/lucky/config')
 const goToRecord = () => router.push('/record')
 const goToHistory = () => router.push('/history')
+const goToReminderList = () => router.push('/reminder/list')
+
+// 提醒摘要：显示已开启的提醒条数
+const reminderSummary = computed(() => {
+  const activeCount = store.reminders.filter(r => r.enabled).length
+  return activeCount > 0 ? `已开启 ${activeCount} 条` : '未开启'
+})
 
 const switchChild = (id: string) => { store.switchChild(id); showChildSwitch.value = false }
 const toggleDarkMode = () => { store.toggleDarkMode() }
@@ -542,6 +571,18 @@ onMounted(() => {
   &__title {
     font-size: 15px;
     font-weight: 500;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+  }
+
+  &__meta {
+    font-size: 13px;
+    color: var(--text-muted);
   }
 }
 

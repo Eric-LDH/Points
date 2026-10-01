@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, LuckyTask } from '@/types'
+import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, LuckyTask, Reminder, ReminderNotificationState } from '@/types'
 import { IconGenerator } from '@/utils/iconGenerator'
 import { Storage } from '@/utils/storage'
+import {
+  REMINDER_NOTIFY_ID_BASE,
+  sendTestNotification,
+  syncReminders as syncSystemReminders
+} from '@/utils/notifications'
 
 export const useAppStore = defineStore('app', () => {
   // State - 初始化为空数组，避免 SSR 水合不匹配问题
@@ -14,6 +19,15 @@ export const useAppStore = defineStore('app', () => {
   const currentChildId = ref<string | null>(null)
   const darkMode = ref<boolean>(false)
   const luckyTasks = ref<LuckyTask[]>([])
+  const reminders = ref<Reminder[]>([])
+  const reminderState = ref<ReminderNotificationState>({
+    supported: true,
+    permission: 'granted',
+    exactAlarmGranted: true,
+    scheduled: 0,
+    lastSyncAt: null,
+    lastError: null
+  })
 
   // 从 localStorage 加载数据
   function loadFromStorage() {
@@ -24,6 +38,7 @@ export const useAppStore = defineStore('app', () => {
     children.value = Storage.children.getAll()
     currentChildId.value = Storage.children.getCurrentId()
     luckyTasks.value = Storage.luckyTasks.getAll()
+    reminders.value = Storage.reminders.getAll()
     // 加载深色模式设置
     const savedDarkMode = localStorage.getItem('darkMode')
     if (savedDarkMode !== null) {
@@ -295,6 +310,7 @@ export const useAppStore = defineStore('app', () => {
         exchangeRecords: exchangeRecords.value,
         children: children.value,
         luckyTasks: luckyTasks.value,
+        reminders: reminders.value,
         backupAt: new Date().toISOString(),
         version: '1.0.0'
       }
@@ -339,6 +355,9 @@ export const useAppStore = defineStore('app', () => {
     
     // 重新加载数据
     loadFromStorage()
+    
+    // 恢复后的提醒需要重新排期到系统
+    await syncReminders(false)
   }
 
   // 幸运任务管理
@@ -366,6 +385,75 @@ export const useAppStore = defineStore('app', () => {
   function deleteLuckyTask(id: string) {
     Storage.luckyTasks.delete(id)
     luckyTasks.value = luckyTasks.value.filter(t => t.id !== id)
+  }
+
+  // 定时提醒管理
+  // 生成稳定的系统通知 ID：取现有最大值 +1，从 100 起，避免删除后下标错位
+  function nextNotifyId(): number {
+    const maxId = reminders.value.reduce(
+      (max, reminder) => Math.max(max, reminder.notifyId || 0),
+      REMINDER_NOTIFY_ID_BASE - 1
+    )
+    return maxId + 1
+  }
+
+  function addReminder(reminderData: Omit<Reminder, 'id' | 'notifyId' | 'createdAt' | 'updatedAt'>) {
+    const newReminder: Reminder = {
+      ...reminderData,
+      id: `reminder_${Date.now()}`,
+      notifyId: nextNotifyId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    Storage.reminders.add(newReminder)
+    reminders.value.push(newReminder)
+    return newReminder
+  }
+
+  function updateReminder(id: string, updates: Partial<Reminder>) {
+    // notifyId 与 createdAt 不允许被外部覆盖
+    const { createdAt, notifyId, id: _id, ...safeUpdates } = updates
+    Storage.reminders.update(id, safeUpdates)
+    const index = reminders.value.findIndex(r => r.id === id)
+    if (index !== -1) {
+      reminders.value[index] = { ...reminders.value[index], ...safeUpdates }
+    }
+  }
+
+  function deleteReminder(id: string) {
+    Storage.reminders.delete(id)
+    reminders.value = reminders.value.filter(r => r.id !== id)
+  }
+
+  function toggleReminder(id: string) {
+    const reminder = reminders.value.find(r => r.id === id)
+    if (!reminder) return
+    const enabled = !reminder.enabled
+    Storage.reminders.update(id, { enabled })
+    reminder.enabled = enabled
+  }
+
+  /**
+   * 把系统里已排期的通知与当前提醒配置对齐。
+   * 每次启动、从后台恢复、以及增删改提醒后都会调用。
+   * @param requestPermission 是否允许弹出系统授权框
+   */
+  async function syncReminders(requestPermission = false) {
+    const outcome = await syncSystemReminders(reminders.value, requestPermission)
+    reminderState.value = {
+      supported: outcome.supported,
+      permission: outcome.permission,
+      exactAlarmGranted: outcome.exactAlarmGranted,
+      scheduled: outcome.scheduled,
+      lastSyncAt: new Date().toISOString(),
+      lastError: outcome.notice
+    }
+    return outcome
+  }
+
+  /** 发送一条立即触发的测试通知 */
+  async function sendTestReminder(title: string, body: string) {
+    return sendTestNotification(title, body)
   }
 
   // 切换深色模式
@@ -431,6 +519,15 @@ export const useAppStore = defineStore('app', () => {
     luckyTasks,
     addLuckyTask,
     updateLuckyTask,
-    deleteLuckyTask
+    deleteLuckyTask,
+    // 定时提醒管理
+    reminders,
+    reminderState,
+    addReminder,
+    updateReminder,
+    deleteReminder,
+    toggleReminder,
+    syncReminders,
+    sendTestReminder
   }
 })

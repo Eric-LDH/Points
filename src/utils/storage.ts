@@ -1,4 +1,4 @@
-import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData, LuckyTask } from '@/types'
+import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData, LuckyTask, Reminder } from '@/types'
 
 const STORAGE_KEYS = {
   RULES: 'points_rules',
@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   EXCHANGE_RECORDS: 'points_exchange_records',
   CHILDREN: 'points_children',
   CURRENT_CHILD_ID: 'points_current_child_id',
-  LUCKY_TASKS: 'points_lucky_tasks' // 幸运任务配置列表
+  LUCKY_TASKS: 'points_lucky_tasks', // 幸运任务配置列表
+  REMINDERS: 'points_reminders' // 定时提醒配置列表
 }
 
 export const Storage = {
@@ -235,6 +236,41 @@ export const Storage = {
   },
 
   /**
+   * 定时提醒管理
+   */
+  reminders: {
+    getAll(): Reminder[] {
+      const data = localStorage.getItem(STORAGE_KEYS.REMINDERS)
+      return data ? JSON.parse(data) : []
+    },
+
+    save(reminders: Reminder[]): void {
+      localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(reminders))
+    },
+
+    add(reminder: Reminder): void {
+      const reminders = this.getAll()
+      reminders.push(reminder)
+      this.save(reminders)
+    },
+
+    update(id: string, updates: Partial<Reminder>): void {
+      const reminders = this.getAll()
+      const index = reminders.findIndex(r => r.id === id)
+      if (index !== -1) {
+        reminders[index] = { ...reminders[index], ...updates, updatedAt: new Date().toISOString() }
+        this.save(reminders)
+      }
+    },
+
+    delete(id: string): void {
+      const reminders = this.getAll()
+      const filtered = reminders.filter(r => r.id !== id)
+      this.save(filtered)
+    }
+  },
+
+  /**
    * 备份与恢复
    */
   backup(): BackupData {
@@ -245,6 +281,7 @@ export const Storage = {
       exchangeRecords: this.exchangeRecords.getAll(),
       children: this.children.getAll(),
       luckyTasks: this.luckyTasks.getAll(),
+      reminders: this.reminders.getAll(),
       backupAt: new Date().toISOString(),
       version: '1.0.0'
     }
@@ -258,6 +295,7 @@ export const Storage = {
     if (data.exchangeRecords) this.exchangeRecords.save(data.exchangeRecords)
     if (data.children) this.children.save(data.children)
     if (data.luckyTasks) this.luckyTasks.save(data.luckyTasks)
+    if (data.reminders) this.reminders.save(data.reminders)
   },
 
   exportToFile(): void {

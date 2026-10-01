@@ -77,6 +77,18 @@ const routes: RouteRecordRaw[] = [
     name: 'History',
     component: () => import('@/pages/history/history.vue'),
     meta: { title: '历史积分' }
+  },
+  {
+    path: '/reminder/list',
+    name: 'ReminderList',
+    component: () => import('@/pages/reminder/list.vue'),
+    meta: { title: '提醒通知' }
+  },
+  {
+    path: '/reminder/edit',
+    name: 'ReminderEdit',
+    component: () => import('@/pages/reminder/edit.vue'),
+    meta: { title: '编辑提醒' }
   }
 ]
 
