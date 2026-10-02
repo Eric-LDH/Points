@@ -79,6 +79,18 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '历史积分' }
   },
   {
+    path: '/auto-reward/list',
+    name: 'AutoRewardList',
+    component: () => import('@/pages/autorule/list.vue'),
+    meta: { title: '自动奖励' }
+  },
+  {
+    path: '/auto-reward/edit',
+    name: 'AutoRewardEdit',
+    component: () => import('@/pages/autorule/edit.vue'),
+    meta: { title: '编辑自动奖励' }
+  },
+  {
     path: '/reminder/list',
     name: 'ReminderList',
     component: () => import('@/pages/reminder/list.vue'),

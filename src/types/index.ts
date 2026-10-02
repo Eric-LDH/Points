@@ -46,6 +46,9 @@ export interface ExchangeRecord {
   childId: string
 }
 
+// 积分记录来源：manual=家长手工勾选/补录，auto=自动奖励引擎发放
+export type PointsSource = 'manual' | 'auto'
+
 // 积分记录模型
 export interface PointsRecord {
   id: string
@@ -58,6 +61,9 @@ export interface PointsRecord {
   note?: string
   isMakeup: boolean // 是否为补录
   childId: string
+  source?: PointsSource // 可选：旧数据未标记时一律视为 manual
+  autoRuleId?: string // 自动奖励规则 id（source=auto 时存在）
+  autoGrantId?: string // 发放台账 id（source=auto 时存在）
 }
 
 // 孩子模型
@@ -101,6 +107,44 @@ export interface ReminderNotificationState {
   lastError: string | null
 }
 
+// 自动奖励规则类型：streak=周期内连续N天每日净得分达标；schedule=周期内到点发放
+export type AutoRewardType = 'streak' | 'schedule'
+
+// 自动奖励的周期类型（周一起点 / 每月1号 / 每年1月1号）
+export type AutoRewardCycle = 'weekly' | 'monthly' | 'yearly'
+
+// 自动奖励规则模型（一套规则对所有孩子生效，各自独立结算）
+export interface AutoRewardRule {
+  id: string
+  name: string
+  type: AutoRewardType
+  cycleType: AutoRewardCycle
+  targetRuleId: string // 预设的得分项（Rule.id）
+  streakDays?: number // streak 专用：连续 N 天
+  dailyThreshold?: number // streak 专用：每日净得分阈值
+  triggerWeekday?: number // schedule 专用：1-7（周一=1），cycleType=weekly 时生效
+  triggerDayOfMonth?: number // schedule 专用：1-31，cycleType=monthly / yearly 时生效
+  triggerMonth?: number // schedule 专用：1-12，cycleType=yearly 时生效
+  enabled: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+// 自动奖励发放台账：每个（规则 × 孩子 × 周期）最多一条
+export interface AutoRewardGrant {
+  id: string
+  autoRuleId: string
+  childId: string
+  cycleKey: string // 'weekly:2026-09-28' | 'monthly:2026-10' | 'yearly:2026'
+  grantDate: string // YYYY-MM-DD，实际落在哪一天
+  points: number
+  recordId: string // 对应的积分记录 id
+  revoked: boolean // 是否已被撤销（记录已删除，视为本周期未发放）
+  suppressed: boolean // 家长声明本周期不再发放
+  createdAt: string
+}
+
 // 备份数据模型
 export interface BackupData {
   rules: Rule[]
@@ -110,6 +154,8 @@ export interface BackupData {
   children: Child[]
   luckyTasks?: LuckyTask[] // 可选，兼容旧版本
   reminders?: Reminder[] // 可选，兼容旧版本
+  autoRewardRules?: AutoRewardRule[] // 可选，兼容旧版本
+  autoRewardGrants?: AutoRewardGrant[] // 可选，兼容旧版本
   backupAt: string
   version: string
 }

@@ -114,6 +114,19 @@ const syncRemindersOnForeground = async () => {
   }
 }
 
+/**
+ * 自动奖励对账。
+ * 时间型规则（如"每周一发每周奖励"）靠这一步在打开 App / 回到前台时补发，
+ * 条件型规则则由积分记录的增删自动触发（见 store 内的 addPointsRecord / deletePointsRecord）。
+ */
+const syncAutoRewardsOnForeground = () => {
+  try {
+    store.reconcileAutoRewards()
+  } catch (error) {
+    console.error('自动奖励对账失败:', error)
+  }
+}
+
 // 监听确认对话框状态变化
 watch(confirmVisible, (newVal: boolean) => {
   if (newVal) {
@@ -181,11 +194,15 @@ onMounted(async () => {
   // 启动时对账一次提醒排期
   await syncRemindersOnForeground()
 
+  // 启动时对账一次自动奖励（含时间型规则的错过补发）
+  syncAutoRewardsOnForeground()
+
   const capacitor = (window as any).Capacitor
   if (capacitor && capacitor.isNativePlatform()) {
     // 回到前台时再次对账：这是「强行停止后自愈」的关键一环
     resumeListener = App.addListener('resume', () => {
       syncRemindersOnForeground()
+      syncAutoRewardsOnForeground()
     })
 
     backButtonListener = App.addListener('backButton', (data: { canGoBack: boolean }) => {

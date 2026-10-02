@@ -58,6 +58,18 @@
           </div>
           <IconFont name="arrowRight" :size="18" color="var(--text-muted)" />
         </div>
+        <div class="menu-item" @click="goToAutoRewardList">
+          <div class="menu-item__left">
+            <div class="menu-item__icon menu-item__icon--warning">
+              <IconFont name="trophy" :size="20" color="#F59E0B" />
+            </div>
+            <span class="menu-item__title">自动奖励</span>
+          </div>
+          <div class="menu-item__right">
+            <span class="menu-item__meta">{{ autoRewardSummary }}</span>
+            <IconFont name="arrowRight" :size="18" color="var(--text-muted)" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -267,6 +279,7 @@ import { useAppStore } from '@/stores'
 import type { Child } from '@/types'
 import { showToast } from '@/utils/toast'
 import { showConfirm } from '@/utils/confirm'
+import { Storage } from '@/utils/storage'
 import { useModalLock } from '@/composables/useModalLock'
 import IconFont from '@/components/IconFont.vue'
 
@@ -345,10 +358,17 @@ const goToLuckyConfig = () => router.push('/lucky/config')
 const goToRecord = () => router.push('/record')
 const goToHistory = () => router.push('/history')
 const goToReminderList = () => router.push('/reminder/list')
+const goToAutoRewardList = () => router.push('/auto-reward/list')
 
 // 提醒摘要：显示已开启的提醒条数
 const reminderSummary = computed(() => {
   const activeCount = store.reminders.filter(r => r.enabled).length
+  return activeCount > 0 ? `已开启 ${activeCount} 条` : '未开启'
+})
+
+// 自动奖励摘要：显示已开启的自动奖励规则条数
+const autoRewardSummary = computed(() => {
+  const activeCount = store.autoRewardRules.filter(r => r.enabled).length
   return activeCount > 0 ? `已开启 ${activeCount} 条` : '未开启'
 })
 
@@ -357,7 +377,8 @@ const toggleDarkMode = () => { store.toggleDarkMode() }
 
 const exportBackup = async () => {
   try {
-    const backupData = { rules: store.rules, rewardItems: store.rewardItems, pointsRecords: store.pointsRecords, exchangeRecords: store.exchangeRecords, children: store.children, luckyTasks: store.luckyTasks, backupAt: new Date().toISOString(), version: '1.0.0' }
+    // 统一走 Storage.backup()，避免手写字段列表遗漏（自动奖励、提醒等）
+    const backupData = Storage.backup()
     const jsonString = JSON.stringify(backupData, null, 2)
     // 使用本地时间格式化，避免时区问题
     const dateStr = formatDateOnly(new Date())

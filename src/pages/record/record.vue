@@ -83,6 +83,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
 import type { Rule, PointsRecord } from '@/types'
 import { showToast } from '@/utils/toast'
+import { showConfirm } from '@/utils/confirm'
 
 // 将 Date 对象格式化为 YYYY-MM-DD 格式的本地日期字符串（避免时区问题）
 const formatDateOnly = (date: Date): string => {
@@ -186,21 +187,37 @@ const toggleRule = (rule: Rule) => {
   }
 }
 
-const submitSingle = () => {
+const submitSingle = async () => {
   // 如果没有选择任何操作
   if (selectedRules.value.length === 0 && cancelRuleIds.value.length === 0) {
     showToast({ message: '请至少选择一个规则进行补录或取消', type: 'warning' })
     return
   }
 
+  // 取消项里若包含自动奖励记录，需要额外确认"本周期不再自动发放"
+  const autoRecordsToCancel = cancelRuleIds.value
+    .map(ruleId => recordsForSelectedDate.value.find(r => r.ruleId === ruleId && r.source === 'auto'))
+    .filter((r): r is PointsRecord => !!r)
+
+  if (autoRecordsToCancel.length > 0) {
+    const confirmed = await showConfirm({
+      title: '取消自动奖励',
+      message: `所选日期中有 ${autoRecordsToCancel.length} 项是系统自动发放的奖励。\n\n确定取消并本周期内不再自动发放吗？`,
+      type: 'warning'
+    })
+    if (!confirmed) return
+  }
+
   let cancelCount = 0
   let addCount = 0
 
-  // 处理取消：删除已完成记录的积分
+  // 处理取消：优先删除手工记录，其次才是自动奖励记录
   cancelRuleIds.value.forEach(ruleId => {
-    const record = recordsForSelectedDate.value.find(r => r.ruleId === ruleId)
+    const manualRecord = recordsForSelectedDate.value.find(r => r.ruleId === ruleId && r.source !== 'auto')
+    const autoRecord = recordsForSelectedDate.value.find(r => r.ruleId === ruleId && r.source === 'auto')
+    const record = manualRecord ?? autoRecord
     if (record) {
-      store.deletePointsRecord(record.id)
+      store.deletePointsRecord(record.id, { suppressAutoReward: record.source === 'auto' })
       cancelCount++
     }
   })
@@ -218,7 +235,8 @@ const submitSingle = () => {
         completedAt: new Date().toISOString(),
         isMakeup: true,
         childId: store.currentChildId!,
-        note: note.value
+        note: note.value,
+        source: 'manual'
       }
       store.addPointsRecord(record)
       addCount++

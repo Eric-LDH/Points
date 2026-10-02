@@ -139,6 +139,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores'
 import type { Rule, PointsRecord } from '@/types'
 import { showToast } from '@/utils/toast'
+import { showConfirm } from '@/utils/confirm'
 import IconFont from '@/components/IconFont.vue'
 
 const store = useAppStore()
@@ -222,20 +223,35 @@ const selectRule = (rule: Rule) => {
     date: formatDateOnly(now),
     completedAt: now.toISOString(),
     isMakeup: false,
-    childId: store.currentChildId!
+    childId: store.currentChildId!,
+    source: 'manual'
   }
   store.addPointsRecord(record)
   if (navigator.vibrate) navigator.vibrate(50)
   showToast({ message: `完成「${rule.name}」+${rule.points}分`, type: 'success' })
 }
 
-const cancelRuleCompletion = (rule: Rule) => {
-  const record = todayRecords.value.find(r => r.ruleId === rule.id)
-  if (record) {
+const cancelRuleCompletion = async (rule: Rule) => {
+  // 优先取消家长手工记录；若只剩自动奖励记录，需要额外确认"本周期不再发放"
+  const manualRecord = todayRecords.value.find(r => r.ruleId === rule.id && r.source !== 'auto')
+  const autoRecord = todayRecords.value.find(r => r.ruleId === rule.id && r.source === 'auto')
+  const record = manualRecord ?? autoRecord
+  if (!record) return
+
+  if (record.source === 'auto') {
+    const confirmed = await showConfirm({
+      title: '取消自动奖励',
+      message: `「${rule.name}」是系统自动发放的奖励。\n\n确定取消并本周期内不再自动发放吗？`,
+      type: 'warning'
+    })
+    if (!confirmed) return
+    store.deletePointsRecord(record.id, { suppressAutoReward: true })
+  } else {
     store.deletePointsRecord(record.id)
-    if (navigator.vibrate) navigator.vibrate(30)
-    showToast({ message: `已取消「${rule.name}」的完成状态`, type: 'info' })
   }
+
+  if (navigator.vibrate) navigator.vibrate(30)
+  showToast({ message: `已取消「${rule.name}」的完成状态`, type: 'info' })
 }
 
 const completeRule = (rule: Rule) => {

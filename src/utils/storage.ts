@@ -1,4 +1,4 @@
-import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData, LuckyTask, Reminder } from '@/types'
+import type { Rule, RewardItem, PointsRecord, ExchangeRecord, Child, BackupData, LuckyTask, Reminder, AutoRewardRule, AutoRewardGrant } from '@/types'
 
 const STORAGE_KEYS = {
   RULES: 'points_rules',
@@ -8,7 +8,9 @@ const STORAGE_KEYS = {
   CHILDREN: 'points_children',
   CURRENT_CHILD_ID: 'points_current_child_id',
   LUCKY_TASKS: 'points_lucky_tasks', // 幸运任务配置列表
-  REMINDERS: 'points_reminders' // 定时提醒配置列表
+  REMINDERS: 'points_reminders', // 定时提醒配置列表
+  AUTO_REWARD_RULES: 'points_auto_reward_rules', // 自动奖励规则
+  AUTO_REWARD_GRANTS: 'points_auto_reward_grants' // 自动奖励发放台账
 }
 
 export const Storage = {
@@ -271,6 +273,74 @@ export const Storage = {
   },
 
   /**
+   * 自动奖励规则管理
+   */
+  autoRewardRules: {
+    getAll(): AutoRewardRule[] {
+      const data = localStorage.getItem(STORAGE_KEYS.AUTO_REWARD_RULES)
+      return data ? JSON.parse(data) : []
+    },
+
+    save(rules: AutoRewardRule[]): void {
+      localStorage.setItem(STORAGE_KEYS.AUTO_REWARD_RULES, JSON.stringify(rules))
+    },
+
+    add(rule: AutoRewardRule): void {
+      const rules = this.getAll()
+      rules.push(rule)
+      this.save(rules)
+    },
+
+    update(id: string, updates: Partial<AutoRewardRule>): void {
+      const rules = this.getAll()
+      const index = rules.findIndex(r => r.id === id)
+      if (index !== -1) {
+        rules[index] = { ...rules[index], ...updates, updatedAt: new Date().toISOString() }
+        this.save(rules)
+      }
+    },
+
+    delete(id: string): void {
+      const rules = this.getAll()
+      this.save(rules.filter(r => r.id !== id))
+    }
+  },
+
+  /**
+   * 自动奖励发放台账管理
+   */
+  autoRewardGrants: {
+    getAll(): AutoRewardGrant[] {
+      const data = localStorage.getItem(STORAGE_KEYS.AUTO_REWARD_GRANTS)
+      return data ? JSON.parse(data) : []
+    },
+
+    save(grants: AutoRewardGrant[]): void {
+      localStorage.setItem(STORAGE_KEYS.AUTO_REWARD_GRANTS, JSON.stringify(grants))
+    },
+
+    add(grant: AutoRewardGrant): void {
+      const grants = this.getAll()
+      grants.push(grant)
+      this.save(grants)
+    },
+
+    update(id: string, updates: Partial<AutoRewardGrant>): void {
+      const grants = this.getAll()
+      const index = grants.findIndex(g => g.id === id)
+      if (index !== -1) {
+        grants[index] = { ...grants[index], ...updates }
+        this.save(grants)
+      }
+    },
+
+    delete(id: string): void {
+      const grants = this.getAll()
+      this.save(grants.filter(g => g.id !== id))
+    }
+  },
+
+  /**
    * 备份与恢复
    */
   backup(): BackupData {
@@ -282,6 +352,8 @@ export const Storage = {
       children: this.children.getAll(),
       luckyTasks: this.luckyTasks.getAll(),
       reminders: this.reminders.getAll(),
+      autoRewardRules: this.autoRewardRules.getAll(),
+      autoRewardGrants: this.autoRewardGrants.getAll(),
       backupAt: new Date().toISOString(),
       version: '1.0.0'
     }
@@ -296,6 +368,8 @@ export const Storage = {
     if (data.children) this.children.save(data.children)
     if (data.luckyTasks) this.luckyTasks.save(data.luckyTasks)
     if (data.reminders) this.reminders.save(data.reminders)
+    if (data.autoRewardRules) this.autoRewardRules.save(data.autoRewardRules)
+    if (data.autoRewardGrants) this.autoRewardGrants.save(data.autoRewardGrants)
   },
 
   exportToFile(): void {
